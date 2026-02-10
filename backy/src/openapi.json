@@ -1,0 +1,1343 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "qartt",
+    "version": "1.0.0"
+  },
+  
+  "servers": [
+    {
+      "url": "https://qartt-api.render.com/api/auth"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/customers"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/products"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/categories"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/orders"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/"
+    },
+    {
+      "url": "http://{{backendquartt}}api"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/profile"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/admin"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/vendors"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/logs"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/disputes"
+    },
+    {
+      "url": "https://qartt-api.render.com/api/addresses"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "wishList"
+    },
+    {
+      "name": "Products"
+    },
+    {
+      "name": "categories"
+    },
+    {
+      "name": "Order"
+    },
+    {
+      "name": "Review"
+    },
+    {
+      "name": "OrderTracker"
+    },
+    {
+      "name": "Profile"
+    },
+    {
+      "name": "AdminDash"
+    },
+    {
+      "name": "AdminDash > vendor"
+    },
+    {
+      "name": "AdminDash > disputes"
+    },
+    {
+      "name": "Logs"
+    },
+    {
+      "name": "Disputes"
+    },
+    {
+      "name": "Cart"
+    },
+    {
+      "name": "address"
+    }
+  ],
+  "paths": {
+    "/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "registerAdmin",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/register-vendor": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "registerVendor",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "storeName": {
+                    "type": "string",
+                    "example": "X Hub"
+                  },
+                  "storeDescription": {
+                    "type": "string",
+                    "example": "Apple Store product sales"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "wrefordmessi+103@gmail.com"
+                  },
+                  "phoneNumber": {
+                    "type": "number",
+                    "example": "+2349121257577"
+                  },
+                  "website": {
+                    "type": "string",
+                    "example": "htttps://www.wrashtech.com"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": " {    \"street\": \"xness\",    \"city\": \"Lagos\",    \"state\": \"Lagos State\",    \"postalCode\": \"100001\",    \"country\": \"Nigeria\"  }"
+                  },
+                  "businessRegistration": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "vendorNIN": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "storeLogo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "documentName": {
+                    "type": "string",
+                    "example": "storeLogo"
+                  },
+                  "taxId": {
+                    "type": "string",
+                    "example": "RZ0032902"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "Qartt123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "forgotPassword",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "sendForgetPasswordToken",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "token": "817186",
+                  "email": "wrefordmessi+101@gmail.com"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "email": "wrefordmessi+3@gmail.com",
+                  "password": "Qartt123!"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/wishlist/items/681ce1785fe695c892e20a58": {
+      "post": {
+        "tags": [
+          "wishList"
+        ],
+        "summary": "wishListAdd",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "files": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "category": {
+                    "type": "string",
+                    "example": "681cca2072fb6990b4d1d7b2"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Framer Gadgets"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Glasses for Gadget Cupboard"
+                  },
+                  "price": {
+                    "type": "integer",
+                    "example": "300000"
+                  },
+                  "discountedPrice": {
+                    "type": "integer",
+                    "example": "250000"
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "example": "300"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "wishList"
+        ],
+        "summary": "wishListDelete",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/wishlist": {
+      "get": {
+        "tags": [
+          "wishList"
+        ],
+        "summary": "wishListGet",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/wishlist/clear": {
+      "delete": {
+        "tags": [
+          "wishList"
+        ],
+        "summary": "wishListClear",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "post": {
+        "tags": [
+          "address"
+        ],
+        "summary": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "type": "shipping",
+                  "street": "123 Main St",
+                  "city": "Lagos, Nigeria",
+                  "state": "Lagos",
+                  "postalCode": "10001",
+                  "country": "Nigeria",
+                  "isDefault": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "address"
+        ],
+        "summary": "current_user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/category/681cca2072fb6990b4d1d7b2": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "getByCategory",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/search-products/": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "searchProduct",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "681cca2072fb6990b4d1d7b2"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendorId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "example": "30000"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/683a299c16501a9eea933ac7": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "searchProductById",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/681cca2072fb6990b4d1d7b2": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "getCategoryById",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/cart": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "cart_order",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "addressId": "684de5e141d558db86a09b8e"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/682fa6d99b19377192ec1028": {
+      "delete": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "deleteOrder",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews": {
+      "post": {
+        "tags": [
+          "Review"
+        ],
+        "summary": "reviewCreate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "productId": "681ce1785fe695c892e20a58",
+                  "rating": 5,
+                  "comment": "Updated my rating after excellent customer service!"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews/6830636c21194a9fe7490322/like": {
+      "post": {
+        "tags": [
+          "Review"
+        ],
+        "summary": "likeReview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "productId": "681ce26e531ae96bea9bd9da",
+                  "rating": 5,
+                  "comment": "Updated my rating after excellent customer service!"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews/6830636c21194a9fe7490322/dislike": {
+      "post": {
+        "tags": [
+          "Review"
+        ],
+        "summary": "disLikeReview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "productId": "681ce26e531ae96bea9bd9da",
+                  "rating": 5,
+                  "comment": "Updated my rating after excellent customer service!"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/reviews//product/681ce26e531ae96bea9bd9da": {
+      "get": {
+        "tags": [
+          "Review"
+        ],
+        "summary": "getProductReviews",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/tracking/out-for-delivery/684ea311d42f2df40605d8b2": {
+      "patch": {
+        "tags": [
+          "OrderTracker"
+        ],
+        "summary": "admin_out_for_delivery",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "productId": "681ce1785fe695c892e20a58",
+                  "rating": 5,
+                  "comment": "Updated my rating after excellent customer service!"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/tracking/start/684ea311d42f2df40605d8b2": {
+      "get": {
+        "tags": [
+          "OrderTracker"
+        ],
+        "summary": "start_tracking",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/tracking/684ea311d42f2df40605d8b2": {
+      "get": {
+        "tags": [
+          "OrderTracker"
+        ],
+        "summary": "trackingInfo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/profile": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "create",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "example": "Johny"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Fedrico"
+                  },
+                  "alternateEmail": {
+                    "type": "string",
+                    "example": "wrashy@tech.com"
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "example": "lagos/Africa"
+                  },
+                  "files": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/current": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "getCurrent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/vendors/verify/68375274b19f43b2aaf2568a": {
+      "patch": {
+        "tags": [
+          "AdminDash > vendor"
+        ],
+        "summary": "verify",
+        "requestBody": {
+          "content": {}
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/verify/68234bfd0bdf99577daf36dd": {
+      "patch": {
+        "tags": [
+          "AdminDash > vendor"
+        ],
+        "summary": "getVendors",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/vendors/": {
+      "get": {
+        "tags": [
+          "AdminDash > vendor"
+        ],
+        "summary": "getVendors",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/vendors/stats": {
+      "get": {
+        "tags": [
+          "AdminDash > vendor"
+        ],
+        "summary": "getVendorsStats",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/vendors/products/68375274b19f43b2aaf2568f": {
+      "get": {
+        "tags": [
+          "AdminDash > vendor"
+        ],
+        "summary": "getVendorsProducts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/disputes/6838a9460641657f4d5e457a/respond": {
+      "post": {
+        "tags": [
+          "Disputes"
+        ],
+        "summary": "respondDispute",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "responseMessage": "noted"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/disputes/6838a9460641657f4d5e457a/status": {
+      "patch": {
+        "tags": [
+          "AdminDash > disputes"
+        ],
+        "summary": "updateDisputeStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "status": "RESOLVED"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "tags": [
+          "AdminDash"
+        ],
+        "summary": "dash",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/user/683784a521c4c49c1a762e83": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "getLogsByUserId",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/user/683784a621c4c49c1a762e88": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "summary": "getLogsByVendorId",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/carts/items": {
+      "post": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "items": [
+                    {
+                      "productId": "681ce26e531ae96bea9bd9da",
+                      "quantity": 2,
+                      "selectedVariants": [
+                        {
+                          "name": "size",
+                          "value": "MD"
+                        },
+                        {
+                          "name": "color",
+                          "value": "black"
+                        }
+                      ],
+                      "notes": "Need this by Friday"
+                    },
+                    {
+                      "productId": "683a299c16501a9eea933ac7",
+                      "quantity": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/carts": {
+      "get": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "get_carts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/carts/items/683a299c16501a9eea933ac7": {
+      "delete": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "remove_cart",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/carts/clear": {
+      "delete": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "clear_cart",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/684de54841d558db86a09b7e": {
+      "delete": {
+        "tags": [
+          "address"
+        ],
+        "summary": "delete",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/default": {
+      "get": {
+        "tags": [
+          "address"
+        ],
+        "summary": "default_address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "example": "shipping"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    },
+    "/684de5e141d558db86a09b8e": {
+      "patch": {
+        "tags": [
+          "address"
+        ],
+        "summary": "update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "type": "shipping",
+                  "street": "123 Isolo St.",
+                  "city": "Isolo, Lagos",
+                  "state": "Lagos",
+                  "postalCode": "10001",
+                  "country": "Nigeria",
+                  "isDefault": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}
