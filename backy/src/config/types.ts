@@ -57,14 +57,9 @@ export const TYPES = {
     ReviewService: Symbol.for('ReviewService'),
     ReviewController: Symbol.for('ReviewController'),
     // review
-    NewsLetterRepository: Symbol.for('NewsLetterRepository'),
-    NewsLetterService: Symbol.for('NewsLetterService'),
-    NewsLetterController: Symbol.for('NewsLetterController'),
+    PaystackService: Symbol.for('PaystackService'),
     
-    // coupon
-    CouponRepository: Symbol.for('CouponRepository'),
-    CouponService: Symbol.for('CouponService'),
-    CouponController: Symbol.for('CouponController'),
+
     // coupon
     AdminController: Symbol.for('AdminController'),
     AdminService: Symbol.for('AdminService'),

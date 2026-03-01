@@ -6,23 +6,14 @@ import swaggerUi from 'swagger-ui-express';
 import openApiSpec from "./openapi.json"
 import { CORS_ORIGINS, MONGO_URI, NODE_ENV } from "./secrets"
 import { ApiError } from './utils/ApiError';
-import ProductRoutes from './routes/ProductRoutes';
-import DisputeRoutes from './routes/DisputeRoutes';
-import CategoryRoutes from './routes/CategoryRoutes';
+
 import UserRoutes from './routes/UserRoutes';
 import ProfileRoutes from './routes/ProfileRoutes';
 import AuthRoutes from './routes/AuthRoutes';
-import OrderRoutes from './routes/OrderRoutes';
-import CarrieerRoutes from './routes/CarieerRoutes';
-import ReviewRoutes from './routes/ReviewRoutes';
 import ActivityLogRoutes from './routes/ActivityLogRoutes';
-import CustomersRoutes from './customer/routes/IndexRoutes';
 import AddressRoutes from './routes/AddressRoutes';
 import PaymentRoutes from './routes/WebHook';
-import NinVerificationRoutes from './routes/NinRoutes';
-import NewsletterRoute from './routes/NewsletterRoute';
-import VendorRoutes from './vendor/routes/IndexRoutes';
-import WalletRoute from './routes/WalletRoute';
+
 import CarouselRoutes from './routes/CarouselRoutes';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -69,7 +60,13 @@ class App {
       },
     });
     this.app.use('/api', limiter);
-    this.app.use(express.json());
+            // Common middlewares
+            this.app.use(
+              '/api/payments/paystack/webhook',
+              express.raw({ type: 'application/json' })
+          );
+  
+          this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     // this.app.use(
     //   cors({
@@ -206,19 +203,9 @@ class App {
     this.app.use('/api/auth', AuthRoutes);
     this.app.use('/api/currency-code', CurrencyRoutes);
     this.app.use('/api/logs', ActivityLogRoutes);
-    this.app.use('/api/disputes', DisputeRoutes);
-    this.app.use('/api/products', ProductRoutes);
-    this.app.use('/api/wallet', WalletRoute);
-    this.app.use('/api/carrieer', CarrieerRoutes);
-    this.app.use('/api/categories', CategoryRoutes);
-    this.app.use('/api/orders', OrderRoutes);
-    this.app.use('/api/reviews', ReviewRoutes);
-    this.app.use('/api/customers', CustomersRoutes);
-    this.app.use('/api/vendors', VendorRoutes);
     this.app.use('/api/addresses', AddressRoutes);
     this.app.use('/api/payments', PaymentRoutes);
-    this.app.use('/api/newsletter', NewsletterRoute);
-    this.app.use('/api/nin-verification', NinVerificationRoutes);
+
 
     // 404 handler
     this.app.use('*', (_, res) => {

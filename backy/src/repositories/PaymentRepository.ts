@@ -3,7 +3,7 @@ import { PaymentTransactionModel, IPaymentTransaction } from '../models/Payments
 import { FilterQuery, UpdateQuery } from 'mongoose';
 import { Types } from 'mongoose';
 export interface IPaymentRepository {
-  create(payment: IPaymentTransaction, vendorOrders: Types.ObjectId[]): Promise<IPaymentTransaction>;
+  create(payment: IPaymentTransaction): Promise<IPaymentTransaction>;
   getAllByType(type: string, page: number, limit: number, search?: string): Promise<{ data: IPaymentTransaction[]; total: number }>;
   getEscrowStats(userId?: string);
   updatePayments(orderId: string, payment: Partial<IPaymentTransaction>): Promise<IPaymentTransaction>;
@@ -19,20 +19,19 @@ export interface IPaymentRepository {
 
 @injectable()
 export class PaymentRepository implements IPaymentRepository {
-  async create(paymentData: IPaymentTransaction, vendorOrders: Types.ObjectId[]): Promise<IPaymentTransaction> {
+  async create(paymentData: IPaymentTransaction): Promise<IPaymentTransaction> {
 
 
     return await PaymentTransactionModel.create({
-      orders: vendorOrders.map(o => o._id),
       user: paymentData.user,
       amount: paymentData.amount,
       currency: paymentData.currency,
-      paymentMethod: paymentData.paymentMethod,
       transactionId: paymentData.transactionId,
       status: paymentData.status,
       transactionType: paymentData.transactionType,
       gatewayResponse: paymentData.gatewayResponse,
-      metadata: paymentData?.metadata
+      metadata: paymentData?.metadata,
+      property: paymentData.property
     });
 
   }

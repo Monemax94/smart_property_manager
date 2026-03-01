@@ -13,7 +13,6 @@ import bcrypt from 'bcrypt';
 import Profile, { IProfile } from '../models/Profile';
 import { ProfileService } from './ProfileService';
 import { ApiError } from '../utils/ApiError';
-import { PinService } from './PinService';
 
 @injectable()
 export class AuthService {
@@ -184,30 +183,6 @@ export class AuthService {
     return await this.userRepository.logout(refreshToken)
   }
 
-  async setTransactionPin(userId: Types.ObjectId, pin: string) {
-    const hashedPin = await PinService.hashPin(pin);
 
-    await UserModel.findByIdAndUpdate(userId, {
-      transactionPin: hashedPin
-    });
-
-    return { message: 'Transaction PIN set successfully' };
-  }
-
-  async verifyPin(userId: Types.ObjectId, pin: string) {
-    const user = await UserModel.findById(userId).select('+transactionPin');
-
-    if (!user || !user.transactionPin) {
-      throw ApiError.badRequest(
-        'You must set a transaction PIN before proceeding'
-      );
-    }
-
-    const isValid = await PinService.comparePin(pin, user.transactionPin);
-
-    if (!isValid) {
-      throw ApiError.unauthorized('Invalid transaction PIN');
-    }
-    return true;
-  }
+ 
 }

@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { Response } from 'express';
-import { AuthenticatedRequest } from '../../types/customRequest';
-import { IWishlistService } from '../../services/WishlistService';
+import { AuthenticatedRequest } from '../types/customRequest';
+import { IWishlistService } from '../services/WishlistService';
 import { Types } from 'mongoose';
-import { TYPES } from '../../config/types';
-import { asyncHandler } from '../../utils/asyncHandler';
-import { ApiResponse } from '../../utils/ApiResponse';
+import { TYPES } from '../config/types';
+import { asyncHandler } from '../utils/asyncHandler';
+import { ApiResponse } from '../utils/ApiResponse';
 
 @injectable()
 export class WishlistController {

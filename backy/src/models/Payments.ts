@@ -1,13 +1,6 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export enum PaymentMethod {
-  CreditCard = 'credit_card',
-  PayPal = 'paypal',
-  Stripe = 'Stripe',
-  BankTransfer = 'bank_transfer',
-  Crypto = 'crypto',
-  MobileMoney = 'mobile_money',
-}
+
 
 export enum TransactionStatus {
   Pending = 'pending',
@@ -26,6 +19,14 @@ export enum TransactionType {
   FeaturePayment = 'feature_payment',
   Refund = 'refund'
 }
+export enum PaymentProvider {
+  STRIPE = 'stripe',
+  PAYPAL = 'paypal',
+  PAYSTACK = 'paystack',
+  CASH_ON_DELIVERY = 'cash_on_delivery',
+  WALLET = 'wallet'
+}
+
 
 export enum CurrencyCode {
   USD = 'USD',
@@ -47,13 +48,13 @@ export enum CurrencyCode {
 
 export interface IPaymentTransaction extends Document {
   // order: Types.ObjectId;
-  orders: Types.ObjectId[]; 
+  property: Types.ObjectId; 
   user: Types.ObjectId;
   amount: number;
   currency: CurrencyCode;
-  paymentMethod: PaymentMethod;
   transactionId: string;
   status: TransactionStatus;
+  provider?: PaymentProvider;
   transactionType: TransactionType;
   gatewayResponse?: any;
   paymentDate?: Date;
@@ -63,15 +64,17 @@ export interface IPaymentTransaction extends Document {
   transactID?: string;
 }
 
+
+
 const PaymentTransactionSchema = new Schema<IPaymentTransaction>(
   {
     // order: { type: Schema.Types.ObjectId, ref: 'Order', required: true, index: true },
-    orders: [{
+    property: {
       type: Schema.Types.ObjectId,
-      ref: 'Order',
+      ref: 'Property',
       required: true,
       index: true
-    }],
+    },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     amount: { type: Number, required: true, min: 0.01 },
     currency: {
@@ -80,11 +83,7 @@ const PaymentTransactionSchema = new Schema<IPaymentTransaction>(
       default: CurrencyCode.USD,
       required: true
     },
-    paymentMethod: {
-      type: String,
-      enum: Object.values(PaymentMethod),
-      required: true
-    },
+  
     transactionType: {
       type: String,
       enum: Object.values(TransactionType),
@@ -99,6 +98,12 @@ const PaymentTransactionSchema = new Schema<IPaymentTransaction>(
       type: String,
       enum: Object.values(TransactionStatus),
       default: TransactionStatus.Pending,
+      required: true
+    },
+    provider: {
+      type: String,
+      enum: Object.values(PaymentProvider),
+      default: PaymentProvider.PAYSTACK,
       required: true
     },
     gatewayResponse: {

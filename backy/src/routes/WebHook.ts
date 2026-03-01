@@ -1,36 +1,30 @@
 import express, { Router } from 'express';
 import { container } from '../config/inversify.config';
 import { TYPES } from '../config/types';
-import { StripeWebhookController } from '../controllers/StripeWebhookController';
+import { PaymentController } from '../controllers/PaymentController';
 import { authenticate } from '../middleware/authMiddleware';
 
 class WebHookRoutes {
   public router: Router;
-  private controller: StripeWebhookController;
+  private controller: PaymentController;
 
   constructor() {
     this.router = Router();
-    this.controller = container.get<StripeWebhookController>(TYPES.StripeWebhookController);
+    this.controller = container.get<PaymentController>(TYPES.PaymentController);
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
-    this.router.post(
-      '/stripe/webhook',
-      authenticate,
-      express.raw({ type: 'application/json' }),
-      this.controller.handleWebhook
-    )
-    this.router.post(
-      '/stripe/intent',
-      authenticate,
-      this.controller.createPaymentForCart
-    )
-    this.router.post(
-      '/stripe/intent-verify',
-      authenticate,
-      this.controller.verifyPaymentIntent
-    )
+            //Public route (NO AUTH)
+            this.router.post(
+              '/paystack/webhook',
+              this.controller.handlePaystackWebhook.bind(PaymentController)
+          );
+  
+          // Protected routes
+          this.router.use(authenticate);
+          this.router.post("/initialize", this.controller.createPaymentIntent.bind(PaymentController));
+          this.router.post('/verify', this.controller.verifyPayment.bind(PaymentController));
   }
 }
 export default new WebHookRoutes().router;

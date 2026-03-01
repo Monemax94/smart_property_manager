@@ -25,7 +25,6 @@ import { decryptData, encryptData } from '../utils/encryption';
 import JwtAuth from "../middleware/Jtoken"
 import { IUserRepository } from '../interfaces/IUserRepository';
 import crypto from 'crypto';
-import redisClient from '../config/redis';
 @injectable()
 export class AuthController {
   constructor(

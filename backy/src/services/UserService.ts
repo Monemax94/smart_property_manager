@@ -50,8 +50,14 @@ export class UserService {
   async findById(userId: Types.ObjectId): Promise<IUserDocument> {
     return this.userRepo.findById(userId.toString());
   }
-  async getUserById(userId: Types.ObjectId): Promise<IUserDocument[]> {
-    return this.userRepo.findUserById(userId);
+
+
+  async getUserById(userId: Types.ObjectId): Promise<IUserDocument | null> {
+    // If your repository can't populate, use the model directly:
+    const user = await UserModel.findById(userId)
+      .populate('profile')
+      .exec();
+    return user;
   }
   async getActivityLog(userId: string) {
     return this.userRepo.getActivityLog(userId);
