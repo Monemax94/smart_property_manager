@@ -62,10 +62,11 @@ export const createApplicationPreferenceSchema = Joi.object({
   twoFactorEnabled: booleanRule.default(false),
   twoFactorMethod: stringRule
     .valid('EMAIL', 'AUTH_APP')
+    .default('AUTH_APP')
     .when('twoFactorEnabled', {
       is: true,
-      then: Joi.required(),
-      otherwise: Joi.forbidden()
+      then: Joi.optional(),
+      otherwise: Joi.optional()
     })
     .messages({
       'any.only': 'Two-factor method must be EMAIL or AUTH_APP'
@@ -104,10 +105,10 @@ export const updateApplicationPreferenceSchema = Joi.object({
 
   twoFactorMethod: stringRule
     .valid('EMAIL', 'AUTH_APP')
+    .default('AUTH_APP')
     .when('twoFactorEnabled', {
       is: true,
-      then: Joi.required(),
-      otherwise: Joi.optional()
+      then: Joi.optional()
     })
     .messages({
       'any.only': 'Two-factor method must be EMAIL or AUTH_APP'
