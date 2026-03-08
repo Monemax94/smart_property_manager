@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 import { INotification, NotificationModel, NotificationStatus, RecipientType } from '../models/Notification';
-import { Types } from 'mongoose';
 
 interface NotificationStats {
   total: number;

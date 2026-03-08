@@ -23,71 +23,113 @@ export class PaystackService {
   constructor(
     // @inject(TYPES.PaymentRepository) private repository: IPaymentRepository
     @inject(TYPES.PaymentRepository) private repository: IPaymentRepository
-  ) {}
+  ) { }
 
-  private axiosInstance = axios.create({
-    baseURL: PAYSTACK_API_URL || 'https://api.paystack.co',
-    headers: {
-      Authorization: `Bearer ${PAYSTACK_SECRET_KEY.trim()}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  private getRequestConfig() {
+    // Ensure PAYSTACK_API_URL is not overriding the default incorrectly
+    const baseURL = process.env.PAYSTACK_API_URL || 'https://api.paystack.co';
+
+    // Test secret key format (should start with 'sk_' or 'sk_test_')
+    const secretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
+
+    if (!secretKey) {
+      throw new Error('PAYSTACK_SECRET_KEY is not set');
+    }
+
+    if (!secretKey.startsWith('sk_')) {
+      console.warn('Paystack secret key has unexpected format. Should start with "sk_"');
+    }
+
+    return {
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+        'Content-Type': 'application/json',
+      },
+      baseURL,
+    };
+  }
 
   /**
    * Initialize a Paystack payment
    * Docs: https://paystack.com/docs/payments/accept-payments/#initialize-a-transaction
    */
-  async initializePayment(
-    amount: number,
-    email: string,
-    metadata: Record<string, any> = {},
-    callbackUrl?: string
-  ): Promise<PaystackInitializeResponse> {
-    try {
-      const response: AxiosResponse<PaystackInitializeResponse> = await this.axiosInstance.post(
-        '/transaction/initialize',
-        {
-          email,
-          amount: Math.ceil(amount * 100),
-          metadata,
-          callback_url: callbackUrl,
-        }
-      );
-      // create payment basse on orderId or walletId
-      if (response.status) {
-        const newReference = response.data.data.reference;
-    
+  /**
+   * Initialize a Paystack payment
+   * Docs: https://paystack.com/docs/payments/accept-payments/#initialize-a-transaction
+   */
+/**
+ * Initialize a Paystack payment
+ * Docs: https://paystack.com/docs/payments/accept-payments/#initialize-a-transaction
+ */
+async initializePayment(
+  amount: number,
+  email: string,
+  metadata: Record<string, any> = {},
+  callbackUrl?: string
+): Promise<PaystackInitializeResponse> {
+  try {
+    const config = this.getRequestConfig();
+    const payload = {
+      email,
+      amount: Math.ceil(amount * 100),
+      metadata,
+      callback_url: callbackUrl,
+    };
 
-        await this.repository.create({
-          amount: Math.ceil(amount * 100),
-          provider: PaymentProvider.PAYSTACK,
-          status: TransactionStatus.Pending,
-          user: metadata.userId,
-          metadata,
-          property: metadata.property,
-          currency: CurrencyCode.NGN,
-          transactionType: TransactionType.FeaturePayment,
-          transactionId: newReference,
-        } as any);
-      }
+    console.log('Sending to Paystack:', {
+      url: `${config.baseURL}/transaction/initialize`,
+      payload,
+      hasAuth: !!config.headers.Authorization
+    });
 
-      return response.data;
-    } catch (error: any) {
-      console.log(error)
-      const errorMessage = error.response?.data?.message || 'Paystack initialization failed';
-      logger.error(`Paystack payment initialization failed: ${errorMessage}`, { amount, email });
-      throw ApiError.internal(errorMessage);
+    const response: AxiosResponse<PaystackInitializeResponse> = await axios.post(
+      `${config.baseURL}/transaction/initialize`,
+      payload,
+      { headers: config.headers }
+    );
+
+    // create payment based on orderId or walletId
+    if (response.data.status) {
+      const newReference = response.data.data.reference;
+
+      await this.repository.create({
+        amount: amount,
+        provider: PaymentProvider.PAYSTACK,
+        status: TransactionStatus.Pending,
+        user: metadata.userId?.toString() || metadata.userId,
+        metadata,
+        property: metadata.propertyId || metadata.property,
+        currency: CurrencyCode.NGN,
+        transactionType: TransactionType.FeaturePayment,
+        transactionId: newReference,
+      } as any);
     }
-  }
 
+    // ✅ FIX: Return the response data
+    return response.data;
+    
+  } catch (error: any) {
+    console.error('Paystack API Error Response:', error.response?.data || error.message);
+    const errorMessage = error.response?.data?.message || 'Paystack initialization failed';
+    logger.error(`Paystack initialization failed for ${email}: ${errorMessage}`, {
+      amount,
+      keyUsed: PAYSTACK_SECRET_KEY ? `${PAYSTACK_SECRET_KEY.substring(0, 10)}...` : 'not-found'
+    });
+    
+    // This throws an error, which is fine - it doesn't need to return
+    throw ApiError.internal(errorMessage);
+  }
+}
   /**
    * Verify a Paystack payment
    * Docs: https://paystack.com/docs/payments/verify-payments/
    */
   async verifyPayment(reference: string): Promise<PaystackVerifyResponse> {
     try {
-      const response: AxiosResponse<PaystackVerifyResponse> = await this.axiosInstance.get(
-        `/transaction/verify/${encodeURIComponent(reference)}`
+      const config = this.getRequestConfig();
+      const response: AxiosResponse<PaystackVerifyResponse> = await axios.get(
+        `${config.baseURL}/transaction/verify/${encodeURIComponent(reference)}`,
+        { headers: config.headers }
       );
       return response.data;
     } catch (error: any) {
@@ -108,13 +150,15 @@ export class PaystackService {
     metadata: Record<string, any> = {}
   ): Promise<PaystackRefundResponse> {
     try {
-      const response: AxiosResponse<PaystackRefundResponse> = await this.axiosInstance.post(
-        '/refund',
+      const config = this.getRequestConfig();
+      const response: AxiosResponse<PaystackRefundResponse> = await axios.post(
+        `${config.baseURL}/refund`,
         {
           transaction: transactionId,
           ...(amount && { amount: amount * 100 }),
           metadata,
-        }
+        },
+        { headers: config.headers }
       );
       return response.data;
     } catch (error: any) {
@@ -159,14 +203,13 @@ export class PaystackService {
    * Handle successful payment
    */
   private async handlePaymentSuccess(data: PaystackWebhookEvent['data']) {
-    const metadata = data.metadata as { walletId?: string; orderId?: string, userId?: string };
+    const metadata = data.metadata as { propertyId?: string, userId?: string };
 
-    if (!metadata.orderId && !metadata.walletId) {
-      throw ApiError.badRequest('Either orderId or walletId must be provided');
+    if (!metadata.propertyId) {
+      throw ApiError.badRequest('propertyId must be provided in metadata');
     }
 
-    const walletId = metadata.walletId ? new Types.ObjectId(metadata.walletId) : null;
-    const orderId = new Types.ObjectId(metadata.orderId);
+    const propertyId = new Types.ObjectId(metadata.propertyId);
 
     const session = await PaymentTransactionModel.startSession();
     session.startTransaction();
@@ -203,7 +246,7 @@ export class PaystackService {
 
       await session.commitTransaction();
 
-      logger.info(`Payment succeeded: ${orderId}, Wallet: ${walletId || 'N/A'}`);
+      logger.info(`Payment succeeded for property: ${propertyId}`);
       return payment;
     } catch (error) {
       await session.abortTransaction();
@@ -292,22 +335,20 @@ export class PaystackService {
 
       const metadata = verification.data.metadata as {
         userId?: string;
-        walletId?: string;
-        orderId?: string
+        propertyId?: string;
       };
 
-      const orderId = metadata.orderId ? new Types.ObjectId(metadata.orderId) : null;
-      const walletId = metadata.walletId ? new Types.ObjectId(metadata.walletId) : null;
+      const propertyId = metadata.propertyId ? new Types.ObjectId(metadata.propertyId) : null;
 
       // Prepare payment data
       const paymentData = {
         status: TransactionStatus.Completed,
-        reference: verification.data.reference,
+        transactionId: verification.data.reference,
         provider: PaymentProvider.PAYSTACK,
         currency: verification.data.currency as CurrencyCode,
-        amount: verification.data.amount,
-        order: orderId,
-        wallet: walletId,
+        amount: verification.data.amount / 100, // Paystack amount is in kobo
+        property: propertyId,
+        user: metadata.userId ? new Types.ObjectId(metadata.userId) : null,
         paidAt: new Date(verification?.data?.paid_at),
         cardDetails: {
           last4: verification?.data?.authorization?.last4,
@@ -321,7 +362,7 @@ export class PaystackService {
       };
 
       // Find existing payment and create/update in parallel
-      const  payment = await this.findAndUpsertPayment(
+      const payment = await this.findAndUpsertPayment(
         reference,
         paymentData
       );
@@ -331,8 +372,7 @@ export class PaystackService {
       }
 
       // Get populated payment
-      const populatedPayment = await this.repository.findById(payment._id.toString());
-      return populatedPayment!;
+      return payment;
     } catch (error) {
       logger.error(`Payment verification failed: ${error.message}`, { reference });
       // Re-throw the original error if it is already a known ApiError type.
@@ -351,9 +391,9 @@ export class PaystackService {
     // let payments: IPayment[] = [];
     let payment: IPaymentTransaction;
 
- 
+
     const upsertedPayment = await PaymentTransactionModel.findOneAndUpdate(
-      { reference },
+      { transactionId: reference },
       { $set: paymentData },
       {
         new: true,
@@ -361,7 +401,7 @@ export class PaystackService {
         setDefaultsOnInsert: true,
       }
     );
-    return  upsertedPayment;
+    return upsertedPayment;
   }
   /**
   * Handle results from parallel operations

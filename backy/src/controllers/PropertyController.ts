@@ -4,13 +4,16 @@ import { PropertyService, CreatePropertyDTO, UpdatePropertyDTO } from '../servic
 import { PropertySearchFilters, PaginationOptions } from '../repositories/PropertyRepository';
 import { TYPES } from '../config/types';
 import { AuthenticatedRequest } from '../types/customRequest';
+import { ApiResponse } from '../utils/ApiResponse';
+import { ApiError } from '../utils/ApiError';
+import { asyncHandler } from '../utils/asyncHandler';
 
 
 @injectable()
 export class PropertyController {
   constructor(
     @inject(TYPES.PropertyService) private propertyService: PropertyService
-  ) {}
+  ) { }
 
   /**
    * Create a new property
@@ -22,6 +25,9 @@ export class PropertyController {
     next: NextFunction
   ): Promise<void> => {
     try {
+      /* #swagger.tags = ['Property'] */
+      /* #swagger.summary = 'Create a new property' */
+
       if (!req.user) {
         res.status(401).json({
           success: false,
@@ -31,7 +37,7 @@ export class PropertyController {
       }
 
       const propertyData: CreatePropertyDTO = req.body;
-      
+
       const property = await this.propertyService.createProperty(
         req.user.id,
         propertyData
@@ -57,6 +63,9 @@ export class PropertyController {
     next: NextFunction
   ): Promise<void> => {
     try {
+      /* #swagger.tags = ['Property'] */
+      /* #swagger.summary = 'Get property by ID' */
+
       const { id } = req.params;
       const incrementView = req.query.view === 'true';
 
@@ -105,6 +114,9 @@ export class PropertyController {
     next: NextFunction
   ): Promise<void> => {
     try {
+      /* #swagger.tags = ['Property'] */
+      /* #swagger.summary = 'Search properties' */
+
       const filters: PropertySearchFilters = {
         propertyType: req.query.propertyType as any,
         propertySubType: req.query.propertySubType as string,
@@ -112,28 +124,28 @@ export class PropertyController {
         city: req.query.city as string,
         state: req.query.state as string,
         country: req.query.country as string,
-        
+
         minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
         maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
         priceType: req.query.priceType as any,
-        
+
         minBedrooms: req.query.minBedrooms ? Number(req.query.minBedrooms) : undefined,
         maxBedrooms: req.query.maxBedrooms ? Number(req.query.maxBedrooms) : undefined,
         minBathrooms: req.query.minBathrooms ? Number(req.query.minBathrooms) : undefined,
         maxBathrooms: req.query.maxBathrooms ? Number(req.query.maxBathrooms) : undefined,
         minArea: req.query.minArea ? Number(req.query.minArea) : undefined,
         maxArea: req.query.maxArea ? Number(req.query.maxArea) : undefined,
-        
+
         furnishingStatus: req.query.furnishingStatus as string,
         parkingSpots: req.query.parkingSpots ? Number(req.query.parkingSpots) : undefined,
-        
+
         isFeatured: req.query.isFeatured === 'true',
         isPremium: req.query.isPremium === 'true',
         isVerified: req.query.isVerified === 'true',
-        
+
         searchText: req.query.q as string,
-        
-        amenities: req.query.amenities 
+
+        amenities: req.query.amenities
           ? (req.query.amenities as string).split(',')
           : undefined
       };
@@ -330,43 +342,35 @@ export class PropertyController {
    * Get my properties
    * GET /api/properties/my-properties
    */
-  getMyProperties = async (
+  getMyProperties = asyncHandler(async (
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      if (!req.user) {
-        res.status(401).json({
-          success: false,
-          message: 'Authentication required'
-        });
-        return;
-      }
+    const options: PaginationOptions = {
+      page: req.query.page ? Number(req.query.page) : 1,
+      limit: req.query.limit ? Number(req.query.limit) : 20
+    };
 
-      const options: PaginationOptions = {
-        page: req.query.page ? Number(req.query.page) : 1,
-        limit: req.query.limit ? Number(req.query.limit) : 20
-      };
+    const search = req.query.search as string;
+    const status = req.query.status as any;
+    const listingType = req.query.listingType as string;
 
-      const result = await this.propertyService.getPropertiesByOwner(
-        req.user.id,
-        options
-      );
+    const result = await this.propertyService.getPropertiesByOwner(
+      req.user._id.toString(),
+      options,
+      search,
+      status,
+      listingType
+    );
 
-      res.status(200).json({
-        success: true,
-        data: result.properties,
-        pagination: {
-          total: result.total,
-          page: options.page,
-          limit: options.limit
-        }
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
+    res.status(200).json(ApiResponse.paginated(result.properties, {
+      total: result.total,
+      page: options.page,
+      limit: options.limit,
+      pages: Math.ceil(result.total / (options.limit || 20))
+    }, 'My properties retrieved successfully'));
+  });
 
   /**
    * Get similar properties
@@ -458,26 +462,22 @@ export class PropertyController {
    * Get property statistics
    * GET /api/properties/statistics
    */
-  getStatistics = async (
+  getStatistics = asyncHandler(async (
     req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      const ownerId = req.query.ownerId 
-        ? String(req.query.ownerId)
-        : req.user?.id;
+    // Use req.user._id as it's guaranteed by the authenticate middleware
+    const ownerId = req.user?._id?.toString();
 
-      const stats = await this.propertyService.getStatistics(ownerId);
-
-      res.status(200).json({
-        success: true,
-        data: stats
-      });
-    } catch (error) {
-      next(error);
+    if (!ownerId) {
+      throw ApiError.unauthorized('Authentication required: User ID missing from session');
     }
-  };
+
+    const stats = await this.propertyService.getStatistics(ownerId);
+
+    res.status(200).json(ApiResponse.success(stats, 'Property statistics retrieved successfully'));
+  });
 
   /**
    * Search properties near location
@@ -491,8 +491,8 @@ export class PropertyController {
     try {
       const latitude = Number(req.query.lat);
       const longitude = Number(req.query.lng);
-      const maxDistance = req.query.maxDistance 
-        ? Number(req.query.maxDistance) 
+      const maxDistance = req.query.maxDistance
+        ? Number(req.query.maxDistance)
         : 5000;
       const limit = req.query.limit ? Number(req.query.limit) : 20;
 

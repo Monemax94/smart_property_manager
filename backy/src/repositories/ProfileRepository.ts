@@ -4,7 +4,6 @@ import ProfileModel from '../models/Profile';
 import { TYPES } from '../config/types';
 import { Model } from "mongoose"
 import { BaseRepository } from '../core/BaseRepository';
-import { ApiError } from '../utils/ApiError';
 
 @injectable()
 export class ProfileRepository extends BaseRepository<IProfile> {

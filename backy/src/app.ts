@@ -13,6 +13,7 @@ import AuthRoutes from './routes/AuthRoutes';
 import ActivityLogRoutes from './routes/ActivityLogRoutes';
 import AddressRoutes from './routes/AddressRoutes';
 import PaymentRoutes from './routes/WebHook';
+import WishlistRoutes from './routes/WishlistRoutes';
 
 import CarouselRoutes from './routes/CarouselRoutes';
 import helmet from 'helmet';
@@ -51,31 +52,23 @@ class App {
     this.app.use(sessionConfig);
     const limiter = rateLimit({
       windowMs: 15 * 60 * 1000,
-      max: 200, // requests per IP
+      max: isProd ? 200 : 5000, // Much higher limit in dev
       standardHeaders: true,
       legacyHeaders: false,
+      skip: (req) => {
+        // Skip rate limiting for localhost in development
+        if (!isProd) {
+          const ip = req.ip || req.connection?.remoteAddress || '';
+          return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+        }
+        return false;
+      },
       message: {
         success: false,
         message: 'Too many requests, please try again later.',
       },
     });
     this.app.use('/api', limiter);
-            // Common middlewares
-            this.app.use(
-              '/api/payments/paystack/webhook',
-              express.raw({ type: 'application/json' })
-          );
-  
-          this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
-    // this.app.use(
-    //   cors({
-    //     origin: '*',
-    //     credentials: true,
-    //     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    //     allowedHeaders: ['Content-Type', 'Authorization'],
-    //   })
-    // );
 
     // Parse and clean origins
     const allowedOrigins = CORS_ORIGINS
@@ -83,12 +76,14 @@ class App {
         .map(origin => origin.trim())
         .filter(origin => origin.length > 0)
       : [];
+
     // Log configuration on startup
     logger.info('CORS Configuration', {
       isProd,
       allowedOrigins,
       raw: CORS_ORIGINS,
     });
+
     this.app.use(
       cors({
         origin: (origin, callback) => {
@@ -117,23 +112,12 @@ class App {
             return callback(null, true);
           }
 
-          // Check with trailing slash removed (common mismatch)
-          const originWithoutSlash = origin.endsWith('/')
-            ? origin.slice(0, -1)
-            : origin;
+          // Check with trailing slash variation
+          const originWithoutSlash = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+          const originWithSlash = !origin.endsWith('/') ? `${origin}/` : origin;
 
-          if (allowedOrigins.includes(originWithoutSlash)) {
-            logger.info('CORS: Origin allowed (without trailing slash)', { origin });
-            return callback(null, true);
-          }
-
-          // Check with trailing slash added (another common mismatch)
-          const originWithSlash = !origin.endsWith('/')
-            ? `${origin}/`
-            : origin;
-
-          if (allowedOrigins.includes(originWithSlash)) {
-            logger.info('CORS: Origin allowed (with trailing slash)', { origin });
+          if (allowedOrigins.includes(originWithoutSlash) || allowedOrigins.includes(originWithSlash)) {
+            logger.info('CORS: Origin allowed (slash mismatch)', { origin });
             return callback(null, true);
           }
 
@@ -152,11 +136,21 @@ class App {
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
         exposedHeaders: ['Content-Range', 'X-Content-Range'],
-        maxAge: 600, // Cache preflight requests for 10 minutes
+        maxAge: 600,
       })
     );
     // Handle preflight requests explicitly
     this.app.options('*', cors());
+
+    // Common middlewares
+    this.app.use(
+      '/api/payments/paystack/webhook',
+      express.raw({ type: 'application/json' })
+    );
+
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+
     this.app.use(celebrateErrors());
   }
 
@@ -168,7 +162,7 @@ class App {
     });
 
     this.app.get('/', (_, res) => {
-      return res.send("welcome to Qartt");
+      return res.send("welcome to Smart Home");
     });
 
     this.app.get('/health', async (req: Request, res: Response) => {
@@ -186,7 +180,7 @@ class App {
       return res.status(isHealthy ? 200 : 503).json({
         success: isHealthy,
         status: isHealthy ? 'ok' : 'degraded',
-        service: 'Qartt API',
+        service: 'Smart Home API',
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
         database: {
@@ -205,6 +199,7 @@ class App {
     this.app.use('/api/logs', ActivityLogRoutes);
     this.app.use('/api/addresses', AddressRoutes);
     this.app.use('/api/payments', PaymentRoutes);
+    this.app.use('/api/wishlist', WishlistRoutes);
 
 
     // 404 handler

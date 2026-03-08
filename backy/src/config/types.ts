@@ -6,12 +6,6 @@ export const TYPES = {
     VendorProductController: Symbol.for('VendorProductController'),
     PayoutBankRepository: Symbol.for('PayoutBankRepository'),
     PayoutBankService: Symbol.for('PayoutBankService'),
-    ProductRequestController: Symbol.for('ProductRequestController'),
-    OrderRequestRepository: Symbol.for('OrderRequestRepository'),
-    OrderRequestService: Symbol.for('OrderRequestService'),
-    IProductRepository: Symbol.for('IProductRepository'),
-    ProductModel: Symbol.for('ProductModel'),
-
     CategoryRepository: Symbol.for('CategoryRepository'),
     CategoryService: Symbol.for('CategoryService'),
     CategoryController: Symbol.for('CategoryController'),
@@ -20,14 +14,7 @@ export const TYPES = {
     CurrencyController: Symbol.for('CurrencyController'),
     CategoryModel: Symbol.for('CategoryModel'),
 
-    OrderModel: Symbol.for('OrderModel'),
-    OrderRepository: Symbol.for('OrderRepository'),
-    OrderService: Symbol.for('OrderService'),
-    OrderController: Symbol.for('OrderController'),
 
-    OrderTrackingRepository: Symbol.for('OrderTrackingRepository'),
-    OrderTrackingService: Symbol.for('OrderTrackingService'),
-    OrderTrackingController: Symbol.for('OrderTrackingController'),
     // user types
     UserRepository: Symbol.for('UserRepository'),
     AnalyticsRepository: Symbol.for('AnalyticsRepository'),

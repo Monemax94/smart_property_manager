@@ -17,7 +17,11 @@ export class NotificationPreferenceRepository {
   async createDefaultPreferences(
     userId: Types.ObjectId
   ): Promise<INotificationPreference> {
-    return NotificationPreference.create({ user: userId });
+    return NotificationPreference.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    ) as unknown as INotificationPreference;
   }
 
   async updatePreferences(

@@ -11,20 +11,13 @@ export class ApplicationPreferenceRepository {
     async createDefaultPreferences(
         userId: string
     ): Promise<IApplicationPreference> {
-        return ApplicationPreference.create({ user: userId });
+        return ApplicationPreference.findOneAndUpdate(
+            { user: userId },
+            { $setOnInsert: { user: userId } },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        ) as unknown as IApplicationPreference;
     }
-
-    // async updatePreferences(
-    //     userId: Types.ObjectId,
-    //     updateData: Partial<IApplicationPreference>
-    // ): Promise<IApplicationPreference | null> {
-    //     return ApplicationPreference.findOneAndUpdate(
-    //         { user: userId },
-    //         { $set: updateData },
-    //         { new: true, upsert: true }
-    //     );
-    // }
-
+    
     async updatePreferences(
         userId: Types.ObjectId,
         updateData: Partial<IApplicationPreference>

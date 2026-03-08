@@ -8,13 +8,11 @@ export interface IPaymentRepository {
   getEscrowStats(userId?: string);
   updatePayments(orderId: string, payment: Partial<IPaymentTransaction>): Promise<IPaymentTransaction>;
   findByTransactionId(transactionId: string): Promise<IPaymentTransaction | null>;
-  findByOrderId(orderId: string): Promise<IPaymentTransaction[]>;
-  findById(orderId: string): Promise<IPaymentTransaction>;
   updateStatus(transactionId: string, status: string): Promise<IPaymentTransaction | null>;
-  updatePaymentStatus(order: string, status: string): Promise<IPaymentTransaction | null>;
   findOne(filter: FilterQuery<IPaymentTransaction>): Promise<IPaymentTransaction | null>;
   update(filter: FilterQuery<IPaymentTransaction>, update: UpdateQuery<IPaymentTransaction>): Promise<IPaymentTransaction | null>;
   getPaymentsByOrderIds(orderIds: Types.ObjectId[]): Promise<IPaymentTransaction[]>;
+  getUserPaymentHistory(userId: string, page: number, limit: number, search?: string, status?: string): Promise<{ data: IPaymentTransaction[]; total: number }>;
 }
 
 @injectable()
@@ -62,35 +60,6 @@ export class PaymentRepository implements IPaymentRepository {
 
   async findByTransactionId(transactionId: string): Promise<IPaymentTransaction | null> {
     return PaymentTransactionModel.findOne({ transactionId });
-  }
-
-  async findByOrderId(orderId: string): Promise<IPaymentTransaction[]> {
-    return PaymentTransactionModel.find({ order: orderId });
-  }
-  async findById(orderId: string): Promise<IPaymentTransaction> {
-    // return PaymentTransactionModel.findById(orderId);
-    return PaymentTransactionModel.findById(orderId)
-      .populate({
-        path: 'orders',
-        populate: [
-          {
-            path: 'products.product',
-            populate: {
-              path: 'vendorId',
-              model: 'Vendor'
-            }
-          },
-          { path: 'shippingAddress' },
-          { path: 'billingAddress' }
-        ]
-      })
-      .populate({
-        path: 'user',
-        populate: {
-          path: 'profile',
-          model: 'Profile'
-        }
-      });
   }
 
   async updateStatus(transactionId: string, status: string): Promise<IPaymentTransaction | null> {
@@ -194,5 +163,36 @@ export class PaymentRepository implements IPaymentRepository {
       released: released.total,
       pendingRelease: pendingRelease.total,
     };
+  }
+
+  async getUserPaymentHistory(
+    userId: string,
+    page = 1,
+    limit = 10,
+    search?: string,
+    status?: string
+  ): Promise<{ data: IPaymentTransaction[]; total: number }> {
+    const query: any = { user: new Types.ObjectId(userId) };
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { transactionId: { $regex: search, $options: 'i' } },
+        { transactID: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const total = await PaymentTransactionModel.countDocuments(query);
+    const data = await PaymentTransactionModel.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('property')
+      .exec();
+
+    return { data, total };
   }
 }

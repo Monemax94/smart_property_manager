@@ -23,6 +23,12 @@ export const errorHandler = (
     console.error('ErrorHandler:', err);
     loggers.info(`ErrorHandler: - ${err}`);
 
+    if (err instanceof ApiError) {
+        return res
+            .status(err.statusCode)
+            .json(err.toJSON());
+    }
+
     // Joi Validation Error
     if (err.name === 'ValidationError' && Array.isArray(err.details)) {
         return res.status(400).json({

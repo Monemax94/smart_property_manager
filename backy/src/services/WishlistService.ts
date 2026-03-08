@@ -6,15 +6,16 @@ import { TYPES } from '../config/types';
 
 export interface IWishlistService {
   getWishlist(userId: Types.ObjectId): Promise<IWishlistDocument>;
-  addToWishlist(userId: Types.ObjectId, propertId: Types.ObjectId): Promise<IWishlistDocument>;
-  removeFromWishlist(userId: Types.ObjectId, propertId: Types.ObjectId): Promise<IWishlistDocument>;
+  addToWishlist(userId: Types.ObjectId, propertyId: Types.ObjectId): Promise<IWishlistDocument>;
+  removeFromWishlist(userId: Types.ObjectId, propertyId: Types.ObjectId): Promise<IWishlistDocument>;
   clearWishlist(userId: Types.ObjectId): Promise<IWishlistDocument>;
 }
+
 @injectable()
 export class WishlistService implements IWishlistService {
   constructor(
     @inject(TYPES.WishlistRepository) private wishlistRepository: IWishlistRepository
-  ) {}
+  ) { }
 
   async getWishlist(userId: Types.ObjectId): Promise<IWishlistDocument> {
     let wishlist = await this.wishlistRepository.getWishlistByUser(userId);
@@ -24,24 +25,24 @@ export class WishlistService implements IWishlistService {
     return wishlist;
   }
 
-  async addToWishlist(userId: Types.ObjectId, propertId: Types.ObjectId): Promise<IWishlistDocument> {
+  async addToWishlist(userId: Types.ObjectId, propertyId: Types.ObjectId): Promise<IWishlistDocument> {
     try {
-      return await this.wishlistRepository.addItemToWishlist(userId, propertId);
+      return await this.wishlistRepository.addItemToWishlist(userId, propertyId);
     } catch (error) {
       if (error.message === 'Property already exists in wishlist') {
-        // Return existing wishlist if product already exists
+        // Return existing wishlist if property already exists
         return this.getWishlist(userId);
       }
       throw error;
     }
   }
 
-  async removeFromWishlist(userId: Types.ObjectId, propertId: Types.ObjectId): Promise<IWishlistDocument> {
+  async removeFromWishlist(userId: Types.ObjectId, propertyId: Types.ObjectId): Promise<IWishlistDocument> {
     try {
-      return await this.wishlistRepository.removeItemFromWishlist(userId, propertId);
+      return await this.wishlistRepository.removeItemFromWishlist(userId, propertyId);
     } catch (error) {
       if (error.message === 'Property not found in wishlist') {
-        // Return current wishlist if product wasn't found
+        // Return current wishlist if property wasn't found
         return this.getWishlist(userId);
       }
       throw error;

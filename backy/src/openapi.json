@@ -1,185 +1,263 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "qartt",
-    "version": "1.0.0"
+    "title": "Smart Home API",
+    "description": "Comprehensive REST API for the Smart Home property management platform. Covers Authentication, User & Profile management, Property listings, Payments, Wishlists, Activity Logs, Addresses, Carousels, and Currency.",
+    "version": "1.0.0",
+    "contact": {
+      "email": "support@smarthome.com"
+    }
   },
-  
   "servers": [
     {
-      "url": "https://qartt-api.render.com/api/auth"
+      "url": "http://localhost:8080",
+      "description": "Local Development Server"
     },
     {
-      "url": "https://qartt-api.render.com/api/customers"
+      "url": "https://api.smarthome.com",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Server health & status check"
     },
     {
-      "url": "https://qartt-api.render.com/api/products"
+      "name": "Auth",
+      "description": "Authentication — register, login, logout, password reset, Google OAuth, token refresh"
     },
     {
-      "url": "https://qartt-api.render.com/api/categories"
+      "name": "User",
+      "description": "User account management (admin operations)"
     },
     {
-      "url": "https://qartt-api.render.com/api/orders"
+      "name": "Profile",
+      "description": "User profile, settings, 2FA, notifications, activity logs"
     },
     {
-      "url": "https://qartt-api.render.com/api/"
+      "name": "Property",
+      "description": "Property listings — create, search, manage, favourite, feature, publish"
     },
     {
-      "url": "http://{{backendquartt}}api"
+      "name": "Payment",
+      "description": "Paystack payment initialisation, verification, webhooks & transaction history"
     },
     {
-      "url": "https://qartt-api.render.com/api/profile"
+      "name": "Wishlist",
+      "description": "User wishlist / saved properties"
     },
     {
-      "url": "https://qartt-api.render.com/api/admin"
+      "name": "ActivityLog",
+      "description": "System activity logs per user or vendor"
     },
     {
-      "url": "https://qartt-api.render.com/api/vendors"
+      "name": "Address",
+      "description": "User delivery / billing address management"
     },
     {
-      "url": "https://qartt-api.render.com/api/logs"
+      "name": "Carousel",
+      "description": "Homepage carousel / banner management"
     },
     {
-      "url": "https://qartt-api.render.com/api/disputes"
-    },
-    {
-      "url": "https://qartt-api.render.com/api/addresses"
+      "name": "Currency",
+      "description": "Supported currency codes"
     }
   ],
   "components": {
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Provide your JWT access token. Obtain one via POST /api/auth/login."
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing or invalid JWT token"
+      },
+      "Forbidden": {
+        "description": "Insufficient role permissions"
+      },
+      "BadRequest": {
+        "description": "Validation error or missing required fields"
+      },
+      "NotFound": {
+        "description": "Resource not found"
       }
     }
   },
-  "tags": [
-    {
-      "name": "Auth"
-    },
-    {
-      "name": "wishList"
-    },
-    {
-      "name": "Products"
-    },
-    {
-      "name": "categories"
-    },
-    {
-      "name": "Order"
-    },
-    {
-      "name": "Review"
-    },
-    {
-      "name": "OrderTracker"
-    },
-    {
-      "name": "Profile"
-    },
-    {
-      "name": "AdminDash"
-    },
-    {
-      "name": "AdminDash > vendor"
-    },
-    {
-      "name": "AdminDash > disputes"
-    },
-    {
-      "name": "Logs"
-    },
-    {
-      "name": "Disputes"
-    },
-    {
-      "name": "Cart"
-    },
-    {
-      "name": "address"
-    }
-  ],
   "paths": {
-    "/register": {
-      "post": {
+    "/health": {
+      "get": {
         "tags": [
-          "Auth"
+          "Health"
         ],
-        "summary": "registerAdmin",
-        "requestBody": {
-          "content": {}
-        },
+        "summary": "Server health check",
+        "description": "Returns server status and MongoDB connection state.",
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+            "description": "Server is healthy"
+          },
+          "503": {
+            "description": "Server degraded — database unavailable"
           }
         }
       }
     },
-    "/register-vendor": {
+    "/api/auth/register-start": {
       "post": {
         "tags": [
           "Auth"
         ],
-        "summary": "registerVendor",
+        "summary": "Step 1 — Initiate registration (send OTP)",
+        "description": "Checks if email is available and sends a verification OTP to the provided email address.",
         "requestBody": {
+          "required": true,
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "email"
+                ],
                 "properties": {
-                  "storeName": {
-                    "type": "string",
-                    "example": "X Hub"
-                  },
-                  "storeDescription": {
-                    "type": "string",
-                    "example": "Apple Store product sales"
-                  },
                   "email": {
                     "type": "string",
-                    "example": "wrefordmessi+103@gmail.com"
-                  },
-                  "phoneNumber": {
-                    "type": "number",
-                    "example": "+2349121257577"
-                  },
-                  "website": {
+                    "format": "email",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Step 2 — Verify email OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "token"
+                ],
+                "properties": {
+                  "email": {
                     "type": "string",
-                    "example": "htttps://www.wrashtech.com"
+                    "format": "email"
                   },
-                  "address": {
+                  "token": {
                     "type": "string",
-                    "example": " {    \"street\": \"xness\",    \"city\": \"Lagos\",    \"state\": \"Lagos State\",    \"postalCode\": \"100001\",    \"country\": \"Nigeria\"  }"
-                  },
-                  "businessRegistration": {
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Step 3 — Complete registration",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "email": {
                     "type": "string",
-                    "format": "binary"
-                  },
-                  "vendorNIN": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "storeLogo": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "documentName": {
-                    "type": "string",
-                    "example": "storeLogo"
-                  },
-                  "taxId": {
-                    "type": "string",
-                    "example": "RZ0032902"
+                    "format": "email"
                   },
                   "password": {
                     "type": "string",
-                    "example": "Qartt123!"
+                    "minLength": 8
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "vendor"
+                    ],
+                    "default": "customer"
                   }
                 }
               }
@@ -187,302 +265,591 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+          "201": {
+            "description": "Registration successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           }
         }
       }
     },
-    "/reset-password": {
+    "/api/auth/register-vendor": {
       "post": {
         "tags": [
           "Auth"
         ],
-        "summary": "forgotPassword",
+        "summary": "Register as a vendor",
         "requestBody": {
-          "content": {}
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/forgot-password": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "sendForgetPasswordToken",
-        "requestBody": {
-          "content": {}
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/verify": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "verify",
-        "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "example": {
-                  "token": "817186",
-                  "email": "wrefordmessi+101@gmail.com"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/login": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "email": "wrefordmessi+3@gmail.com",
-                  "password": "Qartt123!"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/wishlist/items/681ce1785fe695c892e20a58": {
-      "post": {
-        "tags": [
-          "wishList"
-        ],
-        "summary": "wishListAdd",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
+                "required": [
+                  "email",
+                  "password",
+                  "firstName",
+                  "lastName"
+                ],
                 "properties": {
-                  "files": {
+                  "email": {
                     "type": "string",
-                    "format": "binary"
+                    "format": "email"
                   },
-                  "category": {
+                  "password": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "dob": {
                     "type": "string",
-                    "example": "681cca2072fb6990b4d1d7b2"
-                  },
-                  "name": {
-                    "type": "string",
-                    "example": "Framer Gadgets"
-                  },
-                  "description": {
-                    "type": "string",
-                    "example": "Glasses for Gadget Cupboard"
-                  },
-                  "price": {
-                    "type": "integer",
-                    "example": "300000"
-                  },
-                  "discountedPrice": {
-                    "type": "integer",
-                    "example": "250000"
-                  },
-                  "stock": {
-                    "type": "integer",
-                    "example": "300"
+                    "format": "date"
                   }
                 }
               }
             }
           }
         },
+        "responses": {
+          "201": {
+            "description": "Vendor registered"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/register-admin": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a new admin (Super-Admin only)",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "wishList"
-        ],
-        "summary": "wishListDelete",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/wishlist": {
-      "get": {
-        "tags": [
-          "wishList"
-        ],
-        "summary": "wishListGet",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/wishlist/clear": {
-      "delete": {
-        "tags": [
-          "wishList"
-        ],
-        "summary": "wishListClear",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/": {
-      "post": {
-        "tags": [
-          "address"
-        ],
-        "summary": "create",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "example": {
-                  "type": "shipping",
-                  "street": "123 Main St",
-                  "city": "Lagos, Nigeria",
-                  "state": "Lagos",
-                  "postalCode": "10001",
-                  "country": "Nigeria",
-                  "isDefault": true
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "address"
-        ],
-        "summary": "current_user",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+          "201": {
+            "description": "Admin created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       }
     },
-    "/category/681cca2072fb6990b4d1d7b2": {
-      "get": {
+    "/api/auth/login": {
+      "post": {
         "tags": [
-          "Products"
+          "Auth"
         ],
-        "summary": "getByCategory",
-        "security": [
-          {
-            "bearerAuth": []
+        "summary": "Login with email & password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "P@ssword123"
+                  }
+                }
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Login successful — returns accessToken & refreshToken",
             "content": {
-              "application/json": {}
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           }
         }
       }
     },
-    "/search-products/": {
+    "/api/auth/refresh-token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh an expired access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "The refresh token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New tokens issued"
+          },
+          "403": {
+            "description": "Invalid or expired refresh token"
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout (invalidate refresh token)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "description": "The refresh token to invalidate"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged out successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request password reset OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset OTP sent to email"
+          }
+        }
+      }
+    },
+    "/api/auth/token-validation-reset": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Validate password reset OTP token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "token"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token is valid"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password with OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "token",
+                  "newPassword"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/email-token-resend": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Resend password reset OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP resent"
+          }
+        }
+      }
+    },
+    "/api/auth/validate-recovery-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get accounts linked to a recovery email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Linked accounts returned"
+          }
+        }
+      }
+    },
+    "/api/auth/sent-token-recovery-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Send account recovery token via recovery email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recovery token sent"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/verify-token-recovery-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify account recovery token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "token"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token validated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/auth/google-auth": {
       "get": {
         "tags": [
-          "Products"
+          "Auth"
         ],
-        "summary": "searchProduct",
+        "summary": "Initiate Google OAuth flow",
+        "parameters": [
+          {
+            "name": "successRedirect",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "failureRedirect",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "web"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to Google OAuth consent"
+          }
+        }
+      }
+    },
+    "/api/auth/google-auth/callback": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Google OAuth callback",
+        "responses": {
+          "302": {
+            "description": "Redirect to success or failure URL with token"
+          }
+        }
+      }
+    },
+    "/api/auth/google-auth-verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify Google ID token (mobile / SPA flow)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "Google authorization code"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, tokens returned"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/users/email/{email}": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get user by email",
         "security": [
           {
             "bearerAuth": []
@@ -490,12 +857,722 @@
         ],
         "parameters": [
           {
-            "name": "category",
-            "in": "query",
+            "name": "email",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string"
-            },
-            "example": "681cca2072fb6990b4d1d7b2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/users/active": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "List all active users (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active users list"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/users/verify/{userId}": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Verify a user account (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User verified"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/users/deactivate/{userId}": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Deactivate a user account (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deactivated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/users/password/{userId}": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Admin reset user's password",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newPassword"
+                ],
+                "properties": {
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/profile/current": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get current authenticated user's profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile data returned"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/profile/{id}": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get profile by user ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile returned"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Delete a profile (admin)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile deleted"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/profile/update-now": {
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update authenticated user's profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "bio": {
+                    "type": "string"
+                  },
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/profile/reset-password": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Change password while logged in",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/api/profile/notification/preference": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get notification preferences",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferences returned"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update notification preferences",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emailNotifications": {
+                    "type": "boolean"
+                  },
+                  "smsNotifications": {
+                    "type": "boolean"
+                  },
+                  "pushNotifications": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preferences updated"
+          }
+        }
+      }
+    },
+    "/api/profile/activity/logs": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get current user's own activity logs",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity logs list"
+          }
+        }
+      }
+    },
+    "/api/profile/toggle-two-factor": {
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Toggle two-factor authentication on/off",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "2FA toggled"
+          }
+        }
+      }
+    },
+    "/api/profile/two-factor/setup": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get 2FA setup QR code / secret",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "2FA setup data returned"
+          }
+        }
+      }
+    },
+    "/api/profile/two-factor/verify": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Verify 2FA TOTP code",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "2FA verified"
+          }
+        }
+      }
+    },
+    "/api/profile/two-factor/enable": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Enable 2FA after verification",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "2FA enabled"
+          }
+        }
+      }
+    },
+    "/api/profile/two-factor/disable": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Disable 2FA",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "2FA disabled"
+          }
+        }
+      }
+    },
+    "/api/profile/two-factor/status": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get 2FA status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "2FA status returned"
+          }
+        }
+      }
+    },
+    "/api/profile/set-recovery-email": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Set a recovery email address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "recoveryEmail"
+                ],
+                "properties": {
+                  "recoveryEmail": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recovery email set"
+          }
+        }
+      }
+    },
+    "/api/profile/transaction-pin": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Set / update transaction PIN",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "pin"
+                ],
+                "properties": {
+                  "pin": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 6
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PIN set"
+          }
+        }
+      }
+    },
+    "/api/profile/transaction-pin-token": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get token to reset transaction PIN",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token issued"
+          }
+        }
+      }
+    },
+    "/api/profile/application/preference": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get application UI preferences",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preferences returned"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Update application UI preferences (theme, language, etc.)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "theme": {
+                    "type": "string",
+                    "enum": [
+                      "light",
+                      "dark",
+                      "system"
+                    ]
+                  },
+                  "language": {
+                    "type": "string",
+                    "example": "en"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preferences saved"
+          }
+        }
+      }
+    },
+    "/api/properties/statistics": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Get property statistics for current admin/owner",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics: total, active, inactive, featured, premium, avgPrice"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/my-properties": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "List properties owned by the authenticated admin",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
           },
           {
             "name": "search",
@@ -505,7 +1582,68 @@
             }
           },
           {
-            "name": "vendorId",
+            "name": "listingType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "for_rent",
+                "for_sale"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive",
+                "draft",
+                "sold",
+                "rented"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of admin's properties"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/search": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Search properties (public)",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search keyword"
+          },
+          {
+            "name": "listingType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "propertyType",
             "in": "query",
             "schema": {
               "type": "string"
@@ -515,344 +1653,1147 @@
             "name": "minPrice",
             "in": "query",
             "schema": {
-              "type": "integer"
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 12
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching properties"
+          }
+        }
+      }
+    },
+    "/api/properties/featured": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Get featured properties (public)",
+        "responses": {
+          "200": {
+            "description": "Featured properties list"
+          }
+        }
+      }
+    },
+    "/api/properties/premium": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Get premium properties (public)",
+        "responses": {
+          "200": {
+            "description": "Premium properties list"
+          }
+        }
+      }
+    },
+    "/api/properties/nearby": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Get nearby properties by coordinates (public)",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 10
             },
-            "example": "30000"
+            "description": "Radius in km"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+            "description": "Nearby properties"
           }
         }
       }
     },
-    "/683a299c16501a9eea933ac7": {
+    "/api/properties/slug/{slug}": {
       "get": {
         "tags": [
-          "Products"
+          "Property"
         ],
-        "summary": "searchProductById",
-        "security": [
+        "summary": "Get property by URL slug (public)",
+        "parameters": [
           {
-            "bearerAuth": []
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+            "description": "Property data"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
     },
-    "/681cca2072fb6990b4d1d7b2": {
+    "/api/properties/{id}": {
       "get": {
         "tags": [
-          "categories"
+          "Property"
         ],
-        "summary": "getCategoryById",
+        "summary": "Get property by ID (public)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+            "description": "Property data"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
-      }
-    },
-    "/cart": {
-      "post": {
+      },
+      "put": {
         "tags": [
-          "Order"
+          "Property"
         ],
-        "summary": "cart_order",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "addressId": "684de5e141d558db86a09b8e"
-                }
-              }
-            }
-          }
-        },
+        "summary": "Update a property (admin only)",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/682fa6d99b19377192ec1028": {
-      "delete": {
-        "tags": [
-          "Order"
-        ],
-        "summary": "deleteOrder",
-        "security": [
+        "parameters": [
           {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
-        }
-      }
-    },
-    "/api/reviews": {
-      "post": {
-        "tags": [
-          "Review"
         ],
-        "summary": "reviewCreate",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "productId": "681ce1785fe695c892e20a58",
-                  "rating": 5,
-                  "comment": "Updated my rating after excellent customer service!"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/api/reviews/6830636c21194a9fe7490322/like": {
-      "post": {
-        "tags": [
-          "Review"
-        ],
-        "summary": "likeReview",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "productId": "681ce26e531ae96bea9bd9da",
-                  "rating": 5,
-                  "comment": "Updated my rating after excellent customer service!"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/api/reviews/6830636c21194a9fe7490322/dislike": {
-      "post": {
-        "tags": [
-          "Review"
-        ],
-        "summary": "disLikeReview",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "productId": "681ce26e531ae96bea9bd9da",
-                  "rating": 5,
-                  "comment": "Updated my rating after excellent customer service!"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/api/reviews//product/681ce26e531ae96bea9bd9da": {
-      "get": {
-        "tags": [
-          "Review"
-        ],
-        "summary": "getProductReviews",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/tracking/out-for-delivery/684ea311d42f2df40605d8b2": {
-      "patch": {
-        "tags": [
-          "OrderTracker"
-        ],
-        "summary": "admin_out_for_delivery",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "productId": "681ce1785fe695c892e20a58",
-                  "rating": 5,
-                  "comment": "Updated my rating after excellent customer service!"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/tracking/start/684ea311d42f2df40605d8b2": {
-      "get": {
-        "tags": [
-          "OrderTracker"
-        ],
-        "summary": "start_tracking",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/tracking/684ea311d42f2df40605d8b2": {
-      "get": {
-        "tags": [
-          "OrderTracker"
-        ],
-        "summary": "trackingInfo",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/profile": {
-      "post": {
-        "tags": [
-          "Profile"
-        ],
-        "summary": "create",
         "requestBody": {
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "firstName": {
-                    "type": "string",
-                    "example": "Johny"
+                  "title": {
+                    "type": "string"
                   },
-                  "lastName": {
-                    "type": "string",
-                    "example": "Fedrico"
+                  "description": {
+                    "type": "string"
                   },
-                  "alternateEmail": {
+                  "pricing": {
                     "type": "string",
-                    "example": "wrashy@tech.com"
+                    "description": "JSON string"
                   },
-                  "timeZone": {
+                  "features": {
                     "type": "string",
-                    "example": "lagos/Africa"
+                    "description": "JSON string"
                   },
-                  "files": {
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Property updated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Delete a property (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Property deleted"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/similar": {
+      "get": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Get similar properties (public)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Similar properties"
+          }
+        }
+      }
+    },
+    "/api/properties/": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Create a new property listing (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "listingType",
+                  "propertyType"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "listingType": {
+                    "type": "string",
+                    "enum": [
+                      "for_rent",
+                      "for_sale"
+                    ]
+                  },
+                  "propertyType": {
+                    "type": "string",
+                    "enum": [
+                      "residential",
+                      "commercial",
+                      "land"
+                    ]
+                  },
+                  "propertySubType": {
+                    "type": "string"
+                  },
+                  "pricing": {
+                    "type": "string",
+                    "description": "JSON: { rentPrice, salePrice, currency }"
+                  },
+                  "features": {
+                    "type": "string",
+                    "description": "JSON array of feature strings"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Property created"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/publish": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Publish a property (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Property published"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/sold": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Mark property as sold (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Property marked as sold"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/rented": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Mark property as rented (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Property marked as rented"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/feature": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Toggle featured status on a property (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Featured status toggled"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/premium": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Toggle premium status on a property (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Premium status toggled"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/verify": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Verify / approve a property listing (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Property verified"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/properties/{id}/favorite": {
+      "post": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Add property to favourites",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Added to favourites"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Property"
+        ],
+        "summary": "Remove property from favourites",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed from favourites"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/payments/initialize": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Initialise a Paystack payment",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "propertyId",
+                  "amount"
+                ],
+                "properties": {
+                  "propertyId": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "description": "Amount in kobo (NGN × 100)"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "callbackUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment authorization URL returned"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/payments/verify": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Verify a Paystack payment by reference",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment status returned"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/payments/paystack/webhook": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Paystack webhook endpoint (internal)",
+        "description": "Receives and processes Paystack event webhooks. Secured via Paystack-Signature header validation.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          }
+        }
+      }
+    },
+    "/api/payments/transactions": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Get payment transaction history for current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "success",
+                "failed"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated transaction list"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/wishlist/": {
+      "get": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Get current user's wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlist with property details"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/wishlist/add/{propertyId}": {
+      "post": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Add a property to the wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Property added to wishlist"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/wishlist/remove/{propertyId}": {
+      "delete": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Remove a property from the wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed from wishlist"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/wishlist/clear": {
+      "delete": {
+        "tags": [
+          "Wishlist"
+        ],
+        "summary": "Clear the entire wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wishlist cleared"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/logs/user/{userId}": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "summary": "Get activity logs for a specific user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity log list"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/logs/vendor/{vendorId}": {
+      "get": {
+        "tags": [
+          "ActivityLog"
+        ],
+        "summary": "Get activity logs for a vendor",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "vendorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor activity log list"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/addresses/": {
+      "post": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Create a new address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "street",
+                  "city",
+                  "state",
+                  "country"
+                ],
+                "properties": {
+                  "street": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  },
+                  "postalCode": {
+                    "type": "string"
+                  },
+                  "isDefault": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Address created"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Get all addresses for current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Addresses list"
+          }
+        }
+      }
+    },
+    "/api/addresses/default": {
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Get default address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default address"
+          }
+        }
+      }
+    },
+    "/api/addresses/{id}": {
+      "patch": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Update an address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "street": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Address updated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Delete an address",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Address deleted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/carousels/": {
+      "post": {
+        "tags": [
+          "Carousel"
+        ],
+        "summary": "Create a carousel banner (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "subtitle": {
+                    "type": "string"
+                  },
+                  "link": {
+                    "type": "string"
+                  },
+                  "image": {
                     "type": "string",
                     "format": "binary"
                   }
@@ -861,420 +2802,46 @@
             }
           }
         },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+          "201": {
+            "description": "Banner created"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
-      }
-    },
-    "/current": {
+      },
       "get": {
         "tags": [
-          "Profile"
+          "Carousel"
         ],
-        "summary": "getCurrent",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "summary": "List all carousel banners (public)",
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
+            "description": "All banners"
           }
         }
       }
     },
-    "/vendors/verify/68375274b19f43b2aaf2568a": {
+    "/api/carousels/active": {
+      "get": {
+        "tags": [
+          "Carousel"
+        ],
+        "summary": "List active carousel banners (public)",
+        "responses": {
+          "200": {
+            "description": "Active banners"
+          }
+        }
+      }
+    },
+    "/api/carousels/{bannerId}": {
       "patch": {
         "tags": [
-          "AdminDash > vendor"
+          "Carousel"
         ],
-        "summary": "verify",
-        "requestBody": {
-          "content": {}
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/verify/68234bfd0bdf99577daf36dd": {
-      "patch": {
-        "tags": [
-          "AdminDash > vendor"
-        ],
-        "summary": "getVendors",
-        "requestBody": {
-          "content": {}
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/vendors/": {
-      "get": {
-        "tags": [
-          "AdminDash > vendor"
-        ],
-        "summary": "getVendors",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/vendors/stats": {
-      "get": {
-        "tags": [
-          "AdminDash > vendor"
-        ],
-        "summary": "getVendorsStats",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/vendors/products/68375274b19f43b2aaf2568f": {
-      "get": {
-        "tags": [
-          "AdminDash > vendor"
-        ],
-        "summary": "getVendorsProducts",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/disputes/6838a9460641657f4d5e457a/respond": {
-      "post": {
-        "tags": [
-          "Disputes"
-        ],
-        "summary": "respondDispute",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "responseMessage": "noted"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/disputes/6838a9460641657f4d5e457a/status": {
-      "patch": {
-        "tags": [
-          "AdminDash > disputes"
-        ],
-        "summary": "updateDisputeStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "status": "RESOLVED"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/dashboard/stats": {
-      "get": {
-        "tags": [
-          "AdminDash"
-        ],
-        "summary": "dash",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/user/683784a521c4c49c1a762e83": {
-      "get": {
-        "tags": [
-          "Logs"
-        ],
-        "summary": "getLogsByUserId",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/user/683784a621c4c49c1a762e88": {
-      "get": {
-        "tags": [
-          "Logs"
-        ],
-        "summary": "getLogsByVendorId",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/carts/items": {
-      "post": {
-        "tags": [
-          "Cart"
-        ],
-        "summary": "create",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "items": [
-                    {
-                      "productId": "681ce26e531ae96bea9bd9da",
-                      "quantity": 2,
-                      "selectedVariants": [
-                        {
-                          "name": "size",
-                          "value": "MD"
-                        },
-                        {
-                          "name": "color",
-                          "value": "black"
-                        }
-                      ],
-                      "notes": "Need this by Friday"
-                    },
-                    {
-                      "productId": "683a299c16501a9eea933ac7",
-                      "quantity": 1
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/carts": {
-      "get": {
-        "tags": [
-          "Cart"
-        ],
-        "summary": "get_carts",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/carts/items/683a299c16501a9eea933ac7": {
-      "delete": {
-        "tags": [
-          "Cart"
-        ],
-        "summary": "remove_cart",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/carts/clear": {
-      "delete": {
-        "tags": [
-          "Cart"
-        ],
-        "summary": "clear_cart",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/684de54841d558db86a09b7e": {
-      "delete": {
-        "tags": [
-          "address"
-        ],
-        "summary": "delete",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
-            }
-          }
-        }
-      }
-    },
-    "/default": {
-      "get": {
-        "tags": [
-          "address"
-        ],
-        "summary": "default_address",
+        "summary": "Update a carousel banner (admin only)",
         "security": [
           {
             "bearerAuth": []
@@ -1282,59 +2849,166 @@
         ],
         "parameters": [
           {
-            "name": "type",
-            "in": "query",
+            "name": "bannerId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string"
-            },
-            "example": "shipping"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
             }
           }
-        }
-      }
-    },
-    "/684de5e141d558db86a09b8e": {
-      "patch": {
-        "tags": [
-          "address"
         ],
-        "summary": "update",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "example": {
-                  "type": "shipping",
-                  "street": "123 Isolo St.",
-                  "city": "Isolo, Lagos",
-                  "state": "Lagos",
-                  "postalCode": "10001",
-                  "country": "Nigeria",
-                  "isDefault": true
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "subtitle": {
+                    "type": "string"
+                  },
+                  "link": {
+                    "type": "string"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
                 }
               }
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Banner updated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/carousels/{id}": {
+      "delete": {
+        "tags": [
+          "Carousel"
+        ],
+        "summary": "Delete a carousel banner (admin only)",
         "security": [
           {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {}
+            "description": "Banner deleted"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/currency-code/": {
+      "post": {
+        "tags": [
+          "Currency"
+        ],
+        "summary": "Add a supported currency (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "symbol",
+                  "name"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "NGN"
+                  },
+                  "symbol": {
+                    "type": "string",
+                    "example": "₦"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Nigerian Naira"
+                  }
+                }
+              }
             }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Currency added"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "summary": "List all supported currencies (public)",
+        "responses": {
+          "200": {
+            "description": "Currency list"
+          }
+        }
+      }
+    },
+    "/api/currency-code/{id}": {
+      "delete": {
+        "tags": [
+          "Currency"
+        ],
+        "summary": "Remove a currency (admin only)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Currency removed"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       }

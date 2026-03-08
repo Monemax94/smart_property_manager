@@ -22,6 +22,7 @@ class AddressRoutes {
     this.router.get('/', authenticate, this.controller.getUserAddresses);
     this.router.get('/default', authenticate, this.controller.getDefaultAddress);
     this.router.patch('/:id', authenticate, validateBody(updateAddressSchema), this.controller.updateAddress);
+    this.router.put('/:id', authenticate, validateBody(updateAddressSchema), this.controller.updateAddress);
     this.router.delete('/:id', authenticate, this.controller.deleteAddress);
   }
 

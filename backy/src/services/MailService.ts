@@ -27,7 +27,7 @@ export class MailService {
     })
     await sendMail(
       email,
-     'Welcome to Qartt',
+     'Welcome to Smart Home',
       html,
     )
 
@@ -41,7 +41,7 @@ export class MailService {
     })
     await sendMail(
       email,
-      'Welcome to Qartt',
+      'Welcome to Smart Home',
       html,
     )
   }
@@ -66,7 +66,7 @@ export class MailService {
     //     <p>If you did not request a password reset, no further action is required.</p>
     //     <p>This code will expire in 10 minutes.</p>
     //     <hr style="margin: 20px 0;">
-    //     <p style="font-size: 12px; color: #888;">© ${new Date().getFullYear()} Qartt. All rights reserved.</p>
+    //     <p style="font-size: 12px; color: #888;">© ${new Date().getFullYear()} Smart Home. All rights reserved.</p>
     //   </div>
     // `;
     await sendMail(
@@ -106,7 +106,7 @@ export class MailService {
   
             <div style="padding: 30px;">
               <p>Hello,</p>
-              <p>You have been granted <strong>Admin Access</strong> to the <b>Qartt Management Portal</b>.</p>
+              <p>You have been granted <strong>Admin Access</strong> to the <b>SmartHome Management Portal</b>.</p>
   
               <div style="background: #f1f1f1; padding: 15px; border-radius: 6px; margin: 20px 0;">
                 <p style="margin: 0;"><strong>Login Email:</strong> ${email}</p>
@@ -123,7 +123,7 @@ export class MailService {
             </div>
   
             <div style="background: #fafafa; padding: 15px; text-align: center; font-size: 12px; color: #999;">
-              © ${new Date().getFullYear()} Qartt. All rights reserved.
+              © ${new Date().getFullYear()} Smart Home. All rights reserved.
             </div>
           </div>
         </div>

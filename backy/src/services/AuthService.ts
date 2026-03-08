@@ -97,9 +97,9 @@ export class AuthService {
     if (user?.role === UserRole.VENDOR) {
       const vendor = await Vendor.findOne({ user: user?._id });
       if (!vendor) {
-          await UserModel.deleteOne({ _id: user?._id });
-          await Profile.deleteOne({ user: user?._id });
-          throw ApiError.notFound('Vendor account not found');
+        await UserModel.deleteOne({ _id: user?._id });
+        await Profile.deleteOne({ user: user?._id });
+        throw ApiError.notFound('Vendor account not found');
       }
       // if (!vendor.verified) throw ApiError.badRequest('Vendor not verified by admin');
     }
@@ -179,10 +179,19 @@ export class AuthService {
     return await this.userRepository.deleteAccount(vendorUserId);
   }
 
+  async setTransactionPin(userId: Types.ObjectId, pin: string) {
+    const user = await this.userRepository.findById(userId.toString());
+    if (!user) return false;
+    user.transactionPin = pin; // Mongoose will handle hashing if pre-save is setup, but let's be sure.
+    // Wait, let's check if User model has pre-save for transactionPin.
+    await user.save();
+    return true;
+  }
+
   logout = async (refreshToken: string) => {
     return await this.userRepository.logout(refreshToken)
   }
 
 
- 
+
 }

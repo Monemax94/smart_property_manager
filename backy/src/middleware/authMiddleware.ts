@@ -24,26 +24,26 @@ export const authenticate = asyncHandler(async (
   // Extract token
   const header = req.header('Authorization');
   if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json(  ApiError.unauthorized('Authentication required'));
+    return res.status(401).json(ApiError.unauthorized('Authentication required'));
   }
 
   const token = header.replace('Bearer ', '').trim();
-  
+
   // Verify & decode
   const payload = await tokenService.verifyToken(token);
   if (!payload) {
-    return res.status(401).json(  ApiError.unauthorized('Invalid or expired token'));
+    return res.status(401).json(ApiError.unauthorized('Invalid or expired token'));
   }
 
   // Fetch user by ID
   const user = await userRepository.findById(payload._id);
   if (!user) {
-    return res.status(401).json(  ApiError.unauthorized('User not found'));
+    return res.status(401).json(ApiError.unauthorized('User not found'));
   }
 
   // Check account status
   if (!user.isActive || user.isDeleted) {
-    return res.status(403).json(  ApiError.forbidden('Account is not active'));
+    return res.status(403).json(ApiError.forbidden('Account is not active'));
   }
 
   // Update activity tracking
@@ -66,7 +66,7 @@ export const authenticate = asyncHandler(async (
 export const authorize = (requiredRoles: UserRole[]) => {
   return asyncHandler(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json( 
+      return res.status(401).json(
         ApiError.unauthorized('Authentication required')
       )
     }
@@ -83,15 +83,15 @@ export const authorize = (requiredRoles: UserRole[]) => {
           userAgent: req.headers['user-agent']
         }
       );
-      
-      return res.status(403).json(  ApiError.forbidden(`Access restricted to: ${requiredRoles.join(', ')}`));
+
+      return res.status(403).json(ApiError.forbidden(`Access restricted to: ${requiredRoles.join(', ')}`));
     }
     // if (req.user.role === UserRole.VENDOR) {
     //   const hasVendor = await VendorModel.exists({
     //     user: req.user._id,
     //     verified: true
     //   });
-    
+
     //   if (!hasVendor) {
     //     throw ApiError.forbidden(
     //       'Vendor account not yet verified. Kindly await confirmations'

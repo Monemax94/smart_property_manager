@@ -39,7 +39,6 @@ import { ActivityLogController } from '../controllers/ActivityLogController';
 import { AddressController } from '../controllers/AddressController';
 import { AddressRepository } from '../repositories/AddressRepository';
 import { AddressService } from '../services/AddressService';
-import { OrderTrackingRepository, IOrderTrackingRepository } from '../repositories/OrderTrackingRepository';
 import { IWishlistRepository, WishlistRepository } from '../repositories/WishlistRepository';
 import { IWishlistService, WishlistService } from '../services/WishlistService';
 import { PaymentRepository } from '../repositories/PaymentRepository';

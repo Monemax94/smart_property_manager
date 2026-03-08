@@ -73,9 +73,10 @@ export class ProfileController {
     }
 
     await Promise.all(promises);
-    const userInfo = await this.userRepo.findByEmail(req.user?.email)
-    const { password, ...profile } = userInfo
-    return res.json(ApiResponse.success({ ...profile }, 'Profile updated successfully'));
+    const userInfo = await this.userRepo.findByEmail(req.user?.email);
+    const userObj = userInfo?.toObject() || {};
+    const { password, ...profile } = userObj;
+    return res.json(ApiResponse.success(profile, 'Profile updated successfully'));
   });
 
   delete = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -337,13 +338,13 @@ export class ProfileController {
     if (!token || token.length !== 6) {
       return res.status(400).json(
         ApiError.badRequest(
-           'Invalid token format. Must be 6 digits.'
+          'Invalid token format. Must be 6 digits.'
         )
       );
     }
 
     const result = await this.twoFactorService.verifyToken(userId, token);
-    if(!result.verified){
+    if (!result.verified) {
       return res.status(400).json(
         ApiError.badRequest(result.message)
       )
@@ -359,32 +360,32 @@ export class ProfileController {
    */
   enableTwoFactor = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
 
-      const userId = req.user?.id;
-      const { token } = req.body;
-      if (!userId) {
-        return res.status(401).json(ApiError.unauthorized(
-          'Unauthorized'
-        ));
-      }
-  
-      if (!token || token.length !== 6) {
-        return res.status(400).json(
-          ApiError.badRequest(
-             'Invalid token format. Must be 6 digits.'
-          )
-        );
-      }
-      const result = await this.twoFactorService.enableTwoFactor(userId, token);
+    const userId = req.user?.id;
+    const { token } = req.body;
+    if (!userId) {
+      return res.status(401).json(ApiError.unauthorized(
+        'Unauthorized'
+      ));
+    }
 
-      if(!result.verified){
-        return res.status(400).json(
-          ApiError.badRequest(result.message)
+    if (!token || token.length !== 6) {
+      return res.status(400).json(
+        ApiError.badRequest(
+          'Invalid token format. Must be 6 digits.'
         )
-      }
-      return res.status(200).json(
-        ApiResponse.success(result.message)
+      );
+    }
+    const result = await this.twoFactorService.enableTwoFactor(userId, token);
+
+    if (!result.verified) {
+      return res.status(400).json(
+        ApiError.badRequest(result.message)
       )
-   
+    }
+    return res.status(200).json(
+      ApiResponse.success(result.message)
+    )
+
   })
 
   /**
@@ -393,51 +394,51 @@ export class ProfileController {
    */
   disableTwoFactor = asyncHandler(async (req: Request, res: Response) => {
 
-      const userId = req.user?.id;
-      const { token } = req.body;
+    const userId = req.user?.id;
+    const { token } = req.body;
 
-      if (!userId) {
-        return res.status(401).json(ApiError.unauthorized(
-          'Unauthorized'
-        ));
-      }
-  
-      if (!token || token.length !== 6) {
-        return res.status(400).json(
-          ApiError.badRequest(
-             'Invalid token format. Must be 6 digits.'
-          )
-        );
-      }
+    if (!userId) {
+      return res.status(401).json(ApiError.unauthorized(
+        'Unauthorized'
+      ));
+    }
 
-      const result = await this.twoFactorService.disableTwoFactor(userId, token);
-
-      if(!result.verified){
-        return res.status(400).json(
-          ApiError.badRequest(result.message)
+    if (!token || token.length !== 6) {
+      return res.status(400).json(
+        ApiError.badRequest(
+          'Invalid token format. Must be 6 digits.'
         )
-      }
-      return res.status(200).json(
-        ApiResponse.success(result.message)
+      );
+    }
+
+    const result = await this.twoFactorService.disableTwoFactor(userId, token);
+
+    if (!result.verified) {
+      return res.status(400).json(
+        ApiError.badRequest(result.message)
       )
-   
+    }
+    return res.status(200).json(
+      ApiResponse.success(result.message)
+    )
+
   })
 
   /**
    * GET /api/2fa/status
    * Check if 2FA is enabled
    */
-  getTwoFactorStatus =  asyncHandler(async (req: AuthenticatedRequest, res: Response) =>{
-      const userId = req.user?.id;
-      const isEnabled = await this.twoFactorService.checkTwoFactorStatus(userId);
+  getTwoFactorStatus = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.user?.id;
+    const isEnabled = await this.twoFactorService.checkTwoFactorStatus(userId);
 
-      res.status(200).json(
-        ApiResponse.success(
-          {
-            twoFactorEnabled: isEnabled,
-          }
-        )
-      );
-   
+    res.status(200).json(
+      ApiResponse.success(
+        {
+          twoFactorEnabled: isEnabled,
+        }
+      )
+    );
+
   })
 }

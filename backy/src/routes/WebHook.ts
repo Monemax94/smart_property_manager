@@ -15,16 +15,17 @@ class WebHookRoutes {
   }
 
   private initializeRoutes() {
-            //Public route (NO AUTH)
-            this.router.post(
-              '/paystack/webhook',
-              this.controller.handlePaystackWebhook.bind(PaymentController)
-          );
-  
-          // Protected routes
-          this.router.use(authenticate);
-          this.router.post("/initialize", this.controller.createPaymentIntent.bind(PaymentController));
-          this.router.post('/verify', this.controller.verifyPayment.bind(PaymentController));
+    //Public route (NO AUTH)
+    this.router.post(
+      '/paystack/webhook',
+      this.controller.handlePaystackWebhook.bind(PaymentController)
+    );
+
+    // Protected routes
+    this.router.use(authenticate);
+    this.router.get('/history', this.controller.getPaymentHistory.bind(PaymentController));
+    this.router.post("/initialize", this.controller.createPaymentIntent.bind(PaymentController));
+    this.router.post('/verify', this.controller.verifyPayment.bind(PaymentController));
   }
 }
 export default new WebHookRoutes().router;

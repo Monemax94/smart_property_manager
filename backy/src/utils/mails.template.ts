@@ -1,55 +1,55 @@
 interface OTPEmailProps {
-    recipientName: string;
-    otp: string;
-    expirationMinutes: number;
-    subject: string;
-    description: string;
+  recipientName: string;
+  otp: string;
+  expirationMinutes: number;
+  subject: string;
+  description: string;
 }
 
 interface WelcomeEmailProps {
-    recipientName: string;
-    ctaText: string;
-    ctaUrl: string;
+  recipientName: string;
+  ctaText: string;
+  ctaUrl: string;
 }
 
 interface OrderConfirmationProps {
-    recipientName: string;
-    orderNumber: string;
-    supportEmail: string;
-    items: Array<{
-        name: string;
-        price: number;
-        quantity: number;
-    }>;
-    subtotal: number;
-    shippingFee: number;
-    serviceFee: number;
-    shippingAddress: {
-        name: string;
-        street: string;
-        city: string;
-        state: string;
-        zip: string;
-        country: string;
-    };
-    paymentMethod: string;
+  recipientName: string;
+  orderNumber: string;
+  supportEmail: string;
+  items: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+  subtotal: number;
+  shippingFee: number;
+  serviceFee: number;
+  shippingAddress: {
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+  paymentMethod: string;
 }
 
 interface StatusEmailProps {
-    recipientName: string;
-    status: "suspended" | "revoked" | "rejected";
-    suspensionDays?: number;
+  recipientName: string;
+  status: "suspended" | "revoked" | "rejected";
+  suspensionDays?: number;
 }
 
 // Helper function to generate email header
 function emailHeader(): string {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-      <title>Qartt</title>
+      <title>Smart Home</title>
     </head>
     <body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f9fafb;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0; padding: 0;">
@@ -60,8 +60,9 @@ function emailHeader(): string {
               <!-- Header -->
               <tr>
                 <td style="padding: 32px 24px; border-bottom: 1px solid #e5e7eb;">
-                  <p style="font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">
-                    <span style="color: #f59e0b;">Q</span><span style="color: #4f46e5;">artt</span>
+                  <p style="font-family: Arial, Helvetica, sans-serif; font-size: 22px; font-weight: 900; margin: 0; letter-spacing: -1px;">
+                    <span style="color: #DC143C;">SMART</span><span style="color: #1a1a1a;">HOME</span>
+                    <span style="display: inline-block; width: 8px; height: 8px; background: #DC143C; border-radius: 50%; margin-left: 3px; vertical-align: middle;"></span>
                   </p>
                 </td>
               </tr>
@@ -74,30 +75,30 @@ function emailHeader(): string {
 
 // Helper function to generate email footer
 function emailFooter({
-    company = "Qartt",
-    year = new Date().getFullYear(),
-    message = "You are receiving this mail because you registered to join the Qartt platform as a user.",
-    socialLinks = {
-        twitter: "https://x.com/qartt_me",
-        tiktok: "https://tiktok.com/@qartt.me",
-        instagram: "https://instagram.com/qartt.me",
-        facebook: "https://facebook.com/qartt.me",
-    },
-    links = {
-        privacy: "#",
-        terms: "#",
-        help: "#",
-        unsubscribe: "#",
-    },
+  company = "Smart Home",
+  year = new Date().getFullYear(),
+  message = "You are receiving this mail because you registered to join the Smart Home platform as a user.",
+  socialLinks = {
+    twitter: "https://x.com/smarthome_prop",
+    tiktok: "https://tiktok.com/@smarthome.prop",
+    instagram: "https://instagram.com/smarthome.prop",
+    facebook: "https://facebook.com/smarthome.prop",
+  },
+  links = {
+    privacy: "#",
+    terms: "#",
+    help: "#",
+    unsubscribe: "#",
+  },
 } = {}): string {
-    return `
+  return `
                   </table>
                 </td>
               </tr>
               
               <!-- Footer -->
               <tr>
-                <td style="background: linear-gradient(135deg, #5B4EFF 0%, #2D1FFF 100%); padding: 32px 24px;">
+                <td style="background: linear-gradient(135deg, #DC143C 0%, #8B0000 100%); padding: 32px 24px;">
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     
                     <!-- Top Section with Message and Social Icons -->
@@ -183,7 +184,7 @@ function emailFooter({
 
 // Helper function for OTP display
 export function otpDisplay(otp: string): string {
-    return `
+  return `
       <tr>
         <td align="center" style="padding: 24px 0;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
@@ -201,10 +202,10 @@ export function otpDisplay(otp: string): string {
 
 // Export all templates
 export const emailTemplates = {
-    emailVerification: (props: OTPEmailProps): string => {
-        const header = emailHeader();
+  emailVerification: (props: OTPEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -219,7 +220,7 @@ export const emailTemplates = {
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
               Here is your One Time Password (OTP).<br/>
-              Please enter this code to verify your email address for Qartt.
+              Please enter this code to verify your email address for Smart Home.
             </p>
           </td>
         </tr>
@@ -240,18 +241,18 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    passwordReset: (props: OTPEmailProps): string => {
-        const header = emailHeader();
+  passwordReset: (props: OTPEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -266,7 +267,7 @@ export const emailTemplates = {
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
               Here is your One Time Password (OTP).<br/>
-              Please enter this code to reset your password for Qartt.
+              Please enter this code to reset your password for Smart Home.
             </p>
           </td>
         </tr>
@@ -287,23 +288,23 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    accountRecovery: (props: OTPEmailProps): string => {
-        const header = emailHeader();
+  accountRecovery: (props: OTPEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
             <h1 style="font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 700; color: #000; margin: 0; line-height: 1.3;">
-              Recover Your Qartt Account
+              Recover Your Smart Home Account
             </h1>
           </td>
         </tr>
@@ -321,7 +322,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              We received a request to recover your Qartt account using this email. Use the verification code below to confirm your identity and regain access:
+              We received a request to recover your Smart Home account using this email. Use the verification code below to confirm your identity and regain access:
             </p>
           </td>
         </tr>
@@ -343,18 +344,18 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    recoveryEmailVerification: (props: OTPEmailProps): string => {
-        const header = emailHeader();
+  recoveryEmailVerification: (props: OTPEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -398,23 +399,23 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    welcomeVendor: (props: WelcomeEmailProps): string => {
-        const header = emailHeader();
+  welcomeVendor: (props: WelcomeEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
             <h1 style="font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 700; color: #000; margin: 0; line-height: 1.3;">
-              Welcome to Qartt!
+              Welcome to Smart Home!
             </h1>
           </td>
         </tr>
@@ -432,7 +433,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              You're now part of a growing network of trusted vendors bringing African products to the world.
+              You're now part of a growing network of trusted property owners and managers on Smart Home.
             </p>
           </td>
         </tr>
@@ -441,7 +442,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              Qartt helps you reach global buyers, manage orders easily, and grow your business — all in one place.
+              Smart Home helps you list properties, manage tenants, track payments, and grow your portfolio — all in one place.
             </p>
           </td>
         </tr>
@@ -450,7 +451,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              Grow your business, reach new buyers, and be part of Africa's global marketplace.
+              List your properties, connect with tenants, and take full control of your real estate business.
             </p>
           </td>
         </tr>
@@ -460,23 +461,23 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    welcomeBuyer: (props: WelcomeEmailProps): string => {
-        const header = emailHeader();
+  welcomeBuyer: (props: WelcomeEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
             <h1 style="font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 700; color: #000; margin: 0; line-height: 1.3;">
-              Welcome to Qartt!
+              Welcome to Smart Home!
             </h1>
           </td>
         </tr>
@@ -494,7 +495,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              We're thrilled to have you join a global community of buyers discovering authentic African products from trusted vendors.
+              We're thrilled to have you join a growing community of property seekers discovering their dream homes on Smart Home.
             </p>
           </td>
         </tr>
@@ -503,7 +504,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              From food and fashion to handmade treasures — Qartt brings your favorite finds closer than ever.
+              From apartments and studios to luxury villas — Smart Home brings your perfect home closer than ever.
             </p>
           </td>
         </tr>
@@ -513,7 +514,7 @@ export const emailTemplates = {
           <td style="padding-bottom: 24px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="background-color: #4f46e5; border-radius: 6px; padding: 0;">
+                <td style="background-color: #DC143C; border-radius: 6px; padding: 0;">
                   <a href="${props.ctaUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 12px 24px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none;">
                     ${props.ctaText}
                   </a>
@@ -539,21 +540,21 @@ export const emailTemplates = {
               <tr>
                 <td style="padding-bottom: 12px;">
                   <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-                    🛍️ <strong>Browse Products:</strong> Discover curated items from verified vendors.
+                    🏠 <strong>Browse Properties:</strong> Discover verified listings from trusted landlords.
                   </p>
                 </td>
               </tr>
               <tr>
                 <td style="padding-bottom: 12px;">
                   <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-                    🤝 <strong>Make Requests:</strong> Can't find what you want? Request it directly from vendors.
+                    📋 <strong>Easy Applications:</strong> Apply for rental properties with just a few clicks.
                   </p>
                 </td>
               </tr>
               <tr>
                 <td style="padding-bottom: 24px;">
                   <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-                    🏆 <strong>Shop Securely:</strong> Pay safely with protected escrow payments.
+                    🔒 <strong>Pay Securely:</strong> Rent payments handled safely through our secure platform.
                   </p>
                 </td>
               </tr>
@@ -565,7 +566,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              Your connection to home, culture, and craftsmanship — all in one marketplace.
+              Your next home is just a search away — we're excited to help you find it.
             </p>
           </td>
         </tr>
@@ -575,21 +576,21 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    orderConfirmation: (props: OrderConfirmationProps): string => {
-        const total = props.subtotal + props.shippingFee + props.serviceFee;
-        const header = emailHeader();
+  orderConfirmation: (props: OrderConfirmationProps): string => {
+    const total = props.subtotal + props.shippingFee + props.serviceFee;
+    const header = emailHeader();
 
-        const itemsHTML = props.items
-            .map(
-                (item) => `
+    const itemsHTML = props.items
+      .map(
+        (item) => `
         <tr>
           <td style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -611,10 +612,10 @@ export const emailTemplates = {
             </table>
           </td>
         </tr>`
-            )
-            .join("");
+      )
+      .join("");
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -637,7 +638,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              Thank you for your order on Qartt! Your purchase has been successfully placed and sent to the vendor for confirmation.
+              Thank you for your order on Smart Home! Your purchase has been successfully placed and sent to the vendor for confirmation.
             </p>
           </td>
         </tr>
@@ -647,7 +648,7 @@ export const emailTemplates = {
           <td style="padding-bottom: 32px;">
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td style="background-color: #4f46e5; border-radius: 6px; padding: 0;">
+                <td style="background-color: #DC143C; border-radius: 6px; padding: 0;">
                   <a href="#" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 12px 24px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none;">
                     Track your order
                   </a>
@@ -805,7 +806,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              If you have any questions about your delivery, contact us anytime at <a href="mailto:${props.supportEmail}" style="color: #4f46e5; text-decoration: none;">${props.supportEmail}</a>, and we'll make sure your issue is resolved as quickly as possible.
+              If you have any questions about your delivery, contact us anytime at <a href="mailto:${props.supportEmail}" style="color: #DC143C; text-decoration: none;">${props.supportEmail}</a>, and we'll make sure your issue is resolved as quickly as possible.
             </p>
           </td>
         </tr>
@@ -815,18 +816,18 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    accountSuspended: (props: StatusEmailProps): string => {
-        const header = emailHeader();
+  accountSuspended: (props: StatusEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -849,7 +850,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              We're writing to inform you that your Qartt account has been temporarily suspended for ${props.suspensionDays} days due to a violation of our platform policies.
+              We're writing to inform you that your Smart Home account has been temporarily suspended for ${props.suspensionDays} days due to a violation of our platform policies.
             </p>
           </td>
         </tr>
@@ -867,7 +868,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              If you believe this action was taken in error or you'd like to resolve the issue, please <a href="#" style="color: #4f46e5; text-decoration: none;">contact</a> our support team.
+              If you believe this action was taken in error or you'd like to resolve the issue, please <a href="#" style="color: #DC143C; text-decoration: none;">contact</a> our support team.
             </p>
           </td>
         </tr>
@@ -877,18 +878,18 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    verificationRevoked: (props: StatusEmailProps): string => {
-        const header = emailHeader();
+  verificationRevoked: (props: StatusEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -911,7 +912,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              We regret to inform you that your business verification on Qartt has been revoked following a recent review of your account activity.
+              We regret to inform you that your business verification on Smart Home has been revoked following a recent review of your account activity.
             </p>
           </td>
         </tr>
@@ -929,7 +930,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              If you believe this action was taken in error or would like more details, please <a href="#" style="color: #4f46e5; text-decoration: none;">contact</a> our support team.
+              If you believe this action was taken in error or would like more details, please <a href="#" style="color: #DC143C; text-decoration: none;">contact</a> our support team.
             </p>
           </td>
         </tr>
@@ -938,7 +939,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              We're committed to keeping Qartt safe and trustworthy for everyone.
+              We're committed to keeping Smart Home safe and trustworthy for everyone.
             </p>
           </td>
         </tr>
@@ -948,18 +949,18 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    },
+    return header + content + emailFooter();
+  },
 
-    verificationRejected: (props: StatusEmailProps): string => {
-        const header = emailHeader();
+  verificationRejected: (props: StatusEmailProps): string => {
+    const header = emailHeader();
 
-        const content = `
+    const content = `
         <!-- Title -->
         <tr>
           <td style="padding-bottom: 16px;">
@@ -982,7 +983,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              Thank you for submitting your business details for verification on Qartt.
+              Thank you for submitting your business details for verification on Smart Home.
             </p>
           </td>
         </tr>
@@ -1009,7 +1010,7 @@ export const emailTemplates = {
         <tr>
           <td style="padding-bottom: 24px;">
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; line-height: 1.6; margin: 0;">
-              We appreciate your interest in selling on Qartt and look forward to reviewing your updated submission.
+              We appreciate your interest in selling on Smart Home and look forward to reviewing your updated submission.
             </p>
           </td>
         </tr>
@@ -1019,11 +1020,11 @@ export const emailTemplates = {
           <td>
             <p style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #374151; margin: 0;">
               Best Regards,<br/>
-              <strong style="color: #4f46e5;">Qartt team.</strong>
+              <strong style="color: #DC143C;">Smart Home team.</strong>
             </p>
           </td>
         </tr>`;
 
-        return header + content + emailFooter();
-    }
+    return header + content + emailFooter();
+  }
 };

@@ -12,7 +12,7 @@ export interface IWishlist {
   updatedAt: Date;
 }
 
-export interface IWishlistDocument extends IWishlist, Document {}
+export interface IWishlistDocument extends IWishlist, Document { }
 
 const wishlistItemSchema = new Schema<IWishlistItem>({
   property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },
@@ -25,6 +25,6 @@ const wishlistSchema = new Schema<IWishlistDocument>({
 }, { timestamps: true });
 
 // Indexes
-wishlistSchema.index({ 'items.product': 1 });
+wishlistSchema.index({ 'items.property': 1 });
 
 export const WishlistModel = model<IWishlistDocument>('Wishlist', wishlistSchema);

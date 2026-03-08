@@ -10,12 +10,12 @@ export interface PropertySearchFilters {
   city?: string;
   state?: string;
   country?: string;
-  
+
   // Price filters
   minPrice?: number;
   maxPrice?: number;
   priceType?: 'sale' | 'rent' | 'lease';
-  
+
   // Feature filters
   minBedrooms?: number;
   maxBedrooms?: number;
@@ -23,24 +23,24 @@ export interface PropertySearchFilters {
   maxBathrooms?: number;
   minArea?: number;
   maxArea?: number;
-  
+
   // Amenities
   amenities?: string[];
-  
+
   // Additional filters
   furnishingStatus?: string;
   parkingSpots?: number;
   isFeatured?: boolean;
   isPremium?: boolean;
   isVerified?: boolean;
-  
+
   // Owner filter
   ownerId?: string;
   agentId?: string;
-  
+
   // Text search
   searchText?: string;
-  
+
   // Geo-location
   nearLocation?: {
     latitude: number;
@@ -58,7 +58,7 @@ export interface PaginationOptions {
 
 @injectable()
 export class PropertyRepository {
-  
+
   /**
    * Create a new property
    */
@@ -96,22 +96,22 @@ export class PropertyRepository {
     options: PaginationOptions = {}
   ): Promise<{ properties: IProperty[]; total: number; page: number; totalPages: number }> {
     const query = this.buildFilterQuery(filters);
-    
+
     const page = options.page || 1;
     const limit = options.limit || 20;
     const skip = (page - 1) * limit;
-    
+
     const sortBy = options.sortBy || 'createdAt';
     const sortOrder = options.sortOrder === 'asc' ? 1 : -1;
     const sort: any = { [sortBy]: sortOrder };
-    
+
     // Prioritize featured and premium
     if (!options.sortBy) {
       sort.isFeatured = -1;
       sort.isPremium = -1;
       sort.createdAt = -1;
     }
-    
+
     const [properties, total] = await Promise.all([
       PropertyModel.find(query)
         .populate('addressId')
@@ -122,7 +122,7 @@ export class PropertyRepository {
         .exec(),
       PropertyModel.countDocuments(query)
     ]);
-    
+
     return {
       properties,
       total,
@@ -167,22 +167,37 @@ export class PropertyRepository {
    */
   async findByOwner(
     ownerId: string,
-    options: PaginationOptions = {}
+    options: PaginationOptions = {},
+    search?: string,
+    status?: PropertyStatus,
+    listingType?: string
   ): Promise<{ properties: IProperty[]; total: number }> {
     const page = options.page || 1;
     const limit = options.limit || 20;
     const skip = (page - 1) * limit;
-    
+
+    const query: any = { ownerId: new Types.ObjectId(ownerId) };
+
+    if (status) query.status = status;
+    if (listingType) query.listingType = listingType;
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { propertySubType: { $regex: search, $options: 'i' } }
+      ];
+    }
+
     const [properties, total] = await Promise.all([
-      PropertyModel.find({ ownerId })
+      PropertyModel.find(query)
         .populate('addressId')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec(),
-      PropertyModel.countDocuments({ ownerId })
+      PropertyModel.countDocuments(query)
     ]);
-    
+
     return { properties, total };
   }
 
@@ -192,13 +207,13 @@ export class PropertyRepository {
   async findSimilar(propertyId: string, limit: number = 5): Promise<IProperty[]> {
     const property = await PropertyModel.findById(propertyId);
     if (!property) return [];
-    
+
     return await PropertyModel.find({
       _id: { $ne: propertyId },
       propertyType: property.propertyType,
       propertySubType: property.propertySubType,
       status: PropertyStatus.ACTIVE,
-      'features.bedrooms': { 
+      'features.bedrooms': {
         $gte: (property.features.bedrooms || 0) - 1,
         $lte: (property.features.bedrooms || 0) + 1
       }
@@ -234,25 +249,46 @@ export class PropertyRepository {
    */
   async getStatistics(ownerId?: string) {
     const matchStage: any = ownerId ? { ownerId: new Types.ObjectId(ownerId) } : {};
-    
+
     const stats = await PropertyModel.aggregate([
       { $match: matchStage },
       {
         $group: {
-          _id: '$status',
-          count: { $sum: 1 },
-          totalViews: { $sum: '$views' },
-          totalInquiries: { $sum: '$inquiries' }
+          _id: null,
+          total: { $sum: 1 },
+          active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+          inactive: { $sum: { $cond: [{ $eq: ['$status', 'inactive'] }, 1, 0] } },
+          featured: { $sum: { $cond: ['$isFeatured', 1, 0] } },
+          premium: { $sum: { $cond: ['$isPremium', 1, 0] } },
+          totalPrice: {
+            $sum: {
+              $cond: [
+                { $gt: ['$pricing.rentPrice', 0] },
+                '$pricing.rentPrice',
+                { $ifNull: ['$pricing.salePrice', 0] }
+              ]
+            }
+          }
         }
       }
     ]);
-    
-    const totalProperties = await PropertyModel.countDocuments(matchStage);
-    
+
+    const result = stats[0] || {
+      total: 0,
+      active: 0,
+      inactive: 0,
+      featured: 0,
+      premium: 0,
+      totalPrice: 0
+    };
+
     return {
-      totalProperties,
-      byStatus: stats,
-      averageViews: stats.reduce((acc, s) => acc + s.totalViews, 0) / totalProperties || 0
+      total: result.total,
+      active: result.active,
+      inactive: result.inactive,
+      featured: result.featured,
+      premium: result.premium,
+      avgPrice: result.total > 0 ? Math.round(result.totalPrice / result.total) : 0
     };
   }
 
@@ -267,7 +303,7 @@ export class PropertyRepository {
     limit: number = 20
   ): Promise<IProperty[]> {
     const query = this.buildFilterQuery(filters);
-    
+
     return await PropertyModel.find({
       ...query,
       location: {
@@ -320,34 +356,34 @@ export class PropertyRepository {
    */
   private buildFilterQuery(filters: PropertySearchFilters): FilterQuery<IProperty> {
     const query: FilterQuery<IProperty> = {};
-    
+
     if (filters.propertyType) {
       query.propertyType = filters.propertyType;
     }
-    
+
     if (filters.propertySubType) {
       query.propertySubType = filters.propertySubType;
     }
-    
+
     if (filters.listingType) {
       query.listingType = filters.listingType;
     }
-    
+
     if (filters.status) {
       query.status = filters.status;
     } else {
       // Default to active properties
       query.status = PropertyStatus.ACTIVE;
     }
-    
+
     // Price filters
     if (filters.minPrice || filters.maxPrice) {
-      const priceField = filters.priceType === 'rent' 
-        ? 'pricing.rentPrice' 
+      const priceField = filters.priceType === 'rent'
+        ? 'pricing.rentPrice'
         : filters.priceType === 'lease'
-        ? 'pricing.leasePrice'
-        : 'pricing.salePrice';
-      
+          ? 'pricing.leasePrice'
+          : 'pricing.salePrice';
+
       if (filters.minPrice) {
         query[priceField] = { ...query[priceField], $gte: filters.minPrice };
       }
@@ -355,7 +391,7 @@ export class PropertyRepository {
         query[priceField] = { ...query[priceField], $lte: filters.maxPrice };
       }
     }
-    
+
     // Feature filters
     if (filters.minBedrooms !== undefined) {
       query['features.bedrooms'] = { $gte: filters.minBedrooms };
@@ -363,36 +399,36 @@ export class PropertyRepository {
     if (filters.maxBedrooms !== undefined) {
       query['features.bedrooms'] = { ...query['features.bedrooms'], $lte: filters.maxBedrooms };
     }
-    
+
     if (filters.minBathrooms !== undefined) {
       query['features.bathrooms'] = { $gte: filters.minBathrooms };
     }
     if (filters.maxBathrooms !== undefined) {
       query['features.bathrooms'] = { ...query['features.bathrooms'], $lte: filters.maxBathrooms };
     }
-    
+
     if (filters.minArea !== undefined) {
       query['features.builtUpArea'] = { $gte: filters.minArea };
     }
     if (filters.maxArea !== undefined) {
       query['features.builtUpArea'] = { ...query['features.builtUpArea'], $lte: filters.maxArea };
     }
-    
+
     // Amenities filter
     if (filters.amenities && filters.amenities.length > 0) {
       query.amenities = { $all: filters.amenities };
     }
-    
+
     // Furnishing status
     if (filters.furnishingStatus) {
       query['features.furnishingStatus'] = filters.furnishingStatus;
     }
-    
+
     // Parking
     if (filters.parkingSpots !== undefined) {
       query['features.parkingSpots'] = { $gte: filters.parkingSpots };
     }
-    
+
     // Boolean filters
     if (filters.isFeatured !== undefined) {
       query.isFeatured = filters.isFeatured;
@@ -403,7 +439,7 @@ export class PropertyRepository {
     if (filters.isVerified !== undefined) {
       query.isVerified = filters.isVerified;
     }
-    
+
     // Owner/Agent filter
     if (filters.ownerId) {
       query.ownerId = new Types.ObjectId(filters.ownerId);
@@ -411,12 +447,12 @@ export class PropertyRepository {
     if (filters.agentId) {
       query.agentId = new Types.ObjectId(filters.agentId);
     }
-    
+
     // Text search
     if (filters.searchText) {
       query.$text = { $search: filters.searchText };
     }
-    
+
     return query;
   }
 

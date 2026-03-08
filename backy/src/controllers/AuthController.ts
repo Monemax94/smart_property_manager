@@ -115,7 +115,7 @@ export class AuthController {
       this.mailService.vendorWelcome(
         user.email,
         firstName,
-        "Welcome to Qartt",
+        "Welcome to Smart Home",
         MARKETING_FRONTEND_LINK,
       )
     }
@@ -123,7 +123,7 @@ export class AuthController {
       this.mailService.WelcomeBuyer(
         user.email,
         firstName,
-        "Welcome to Qartt",
+        "Welcome to Smart Home",
         FRONTEND_URL,
       )
     }
@@ -172,7 +172,7 @@ export class AuthController {
       this.mailService.vendorWelcome(
         user.email,
         firstName,
-        "Welcome to Qartt",
+        "Welcome to Smart Home",
         // ADMIN_DASH,
         MARKETING_FRONTEND_LINK
       )
@@ -181,7 +181,7 @@ export class AuthController {
       this.mailService.WelcomeBuyer(
         user.email,
         firstName,
-        "Welcome to Qartt",
+        "Welcome to Smart Home",
         FRONTEND_URL,
       )
     }

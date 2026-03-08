@@ -6,7 +6,7 @@ import { upload } from '../config/multer.config';
 import { uploadToCloudinary } from '../middleware/cloudinaryUploads';
 import { authenticate } from '../middleware/authMiddleware';
 import { validateBody } from '../middleware/bodyValidate';
-import { createApplicationPreferenceSchema, updateApplicationPreferenceSchema, updateNotificationPreferenceSchema } from '../validations/preferenceValidations';
+import { updateApplicationPreferenceSchema, updateNotificationPreferenceSchema } from '../validations/preferenceValidations';
 import { resetPasswordSchema, setPinSchema } from '../validations/userValidations';
 
 class ProfileRoutes {

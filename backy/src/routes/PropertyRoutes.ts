@@ -4,7 +4,9 @@ import { TYPES } from '../config/types';
 import { PropertyController } from '../controllers/PropertyController';
 import { createAddressSchema, updateAddressSchema } from "../validations/addressValidations"
 import { validateBody } from '../middleware/bodyValidate';
-import { authenticate } from '../middleware/authMiddleware';
+import { authenticate, requireAdmin } from '../middleware/authMiddleware';
+import { upload } from '../config/multer.config';
+import { uploadToCloudinary } from '../middleware/cloudinaryUploads';
 
 
 class PropertyRoutes {
@@ -19,35 +21,59 @@ class PropertyRoutes {
 
   private initializeRoutes(): void {
 
-    // this.router.post('/', authenticate, validateBody(createAddressSchema), this.controller.createAddress);
-    // this.router.get('/', authenticate, this.controller.getUserAddresses);
-    // this.router.get('/default', authenticate, this.controller.getDefaultAddress);
-    // this.router.patch('/:id', authenticate, validateBody(updateAddressSchema), this.controller.updateAddress);
-    // this.router.delete('/:id', authenticate, this.controller.deleteAddress);
+    // Admin/Owner Management Protected routes (Specific routes first)
+    this.router.get('/statistics', authenticate, requireAdmin, this.controller.getStatistics);
+    this.router.get('/my-properties', authenticate, requireAdmin, this.controller.getMyProperties);
 
-    // Public routes
+    // Public routes (No auth needed or just basic auth)
     this.router.get('/search', this.controller.searchProperties);
     this.router.get('/featured', this.controller.getFeaturedProperties);
     this.router.get('/premium', this.controller.getPremiumProperties);
     this.router.get('/nearby', this.controller.searchNearby);
-    this.router.get('/statistics', this.controller.getStatistics);
     this.router.get('/slug/:slug', this.controller.getPropertyBySlug);
     this.router.get('/:id', this.controller.getPropertyById);
     this.router.get('/:id/similar', this.controller.getSimilarProperties);
 
-    // Protected routes (require authentication)
-    // Uncomment and add your authentication middleware
-    // this.router.use(authenticate);
+    // Basic Protected routes (Require login only)
+    this.router.post('/:id/favorite', authenticate, this.controller.addToFavorites);
+    this.router.delete('/:id/favorite', authenticate, this.controller.removeFromFavorites);
 
-    this.router.post('/', this.controller.createProperty);
-    this.router.get('/my-properties', this.controller.getMyProperties);
+    // Default middlewares for remaining management routes
+    this.router.use(authenticate);
+    this.router.use(requireAdmin);
+
+    this.router.post('/',
+      upload.fields([
+        { name: 'images', maxCount: 15 },
+        { name: 'videos', maxCount: 5 }
+      ]),
+      uploadToCloudinary,
+      (req, res, next) => {
+        const uploadedFiles: any[] = req.body.uploadedFiles || [];
+
+        // Split uploaded files by mimetype: videos vs images
+        req.body.images = uploadedFiles.filter(
+          f => f.fileType === 'video' ? false : true
+        );
+        req.body.videos = uploadedFiles.filter(
+          f => f.fileType === 'video'
+        );
+
+        if (req.body.features && typeof req.body.features === 'string') {
+          try { req.body.features = JSON.parse(req.body.features); } catch (e) { }
+        }
+        if (req.body.pricing && typeof req.body.pricing === 'string') {
+          try { req.body.pricing = JSON.parse(req.body.pricing); } catch (e) { }
+        }
+        next();
+      },
+      this.controller.createProperty
+    );
     this.router.put('/:id', this.controller.updateProperty);
     this.router.delete('/:id', this.controller.deleteProperty);
     this.router.post('/:id/publish', this.controller.publishProperty);
     this.router.post('/:id/sold', this.controller.markAsSold);
     this.router.post('/:id/rented', this.controller.markAsRented);
-    this.router.post('/:id/favorite', this.controller.addToFavorites);
-    this.router.delete('/:id/favorite', this.controller.removeFromFavorites);
     this.router.post('/:id/feature', this.controller.featureProperty);
     this.router.post('/:id/premium', this.controller.makePremium);
 

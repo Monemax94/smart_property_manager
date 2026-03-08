@@ -3,30 +3,32 @@ import { Types } from 'mongoose';
 import { PropertyRepository, PropertySearchFilters, PaginationOptions } from '../repositories/PropertyRepository';
 import { IProperty, ListingType, OwnershipType, PropertyCondition, PropertyStatus, PropertySubType, PropertyType } from '../models/Property';
 import { TYPES } from '../config/types';
+import { ApiError } from '../utils/ApiError';
 
 
 
 export interface CreatePropertyDTO {
-    title: string;
-    description: string;
-    propertyType: PropertyType;  // Use enum instead of string
-    propertySubType: PropertySubType;  // Use enum instead of string
-    listingType: ListingType;  // Use enum instead of string
-    ownerId: string;
-    addressId: string;
-    features: any;
-    pricing: any;
-    images: any[];
-    videos?: any[];
-    amenities?: string[];
-    virtualTour?: string;
-    yearBuilt?: number;
-    propertyCondition?: PropertyCondition;  // Use enum
-    ownershipType?: OwnershipType;  // Use enum
-    location?: {
-      coordinates: [number, number];
-    };
-  }
+  title: string;
+  description: string;
+  propertyType: PropertyType;  // Use enum instead of string
+  propertySubType: PropertySubType;  // Use enum instead of string
+  listingType: ListingType;  // Use enum instead of string
+  ownerId: string;
+  addressId: string;
+  features: any;
+  pricing: any;
+  images: any[];
+  videos?: any[];
+  amenities?: string[];
+  virtualTour?: string;
+  yearBuilt?: number;
+  propertyCondition?: PropertyCondition;  // Use enum
+  ownershipType?: OwnershipType;  // Use enum
+  location?: {
+    coordinates: [number, number];
+  };
+  status?: PropertyStatus;
+}
 
 export interface UpdatePropertyDTO extends Partial<CreatePropertyDTO> {
   status?: PropertyStatus;
@@ -36,7 +38,7 @@ export interface UpdatePropertyDTO extends Partial<CreatePropertyDTO> {
 export class PropertyService {
   constructor(
     @inject(TYPES.PropertyRepository) private propertyRepository: PropertyRepository
-  ) {}
+  ) { }
 
   /**
    * Create a new property listing
@@ -44,20 +46,22 @@ export class PropertyService {
   async createProperty(userId: string, data: CreatePropertyDTO): Promise<IProperty> {
     // Validate ownership
     if (data.ownerId !== userId) {
-      throw new Error('You can only create properties for yourself');
+      throw ApiError.forbidden('You can only create properties for yourself');
     }
 
     // Validate required fields
     if (!data.images || data.images.length === 0) {
-      throw new Error('At least one image is required');
+      throw ApiError.badRequest('At least one image is required');
     }
+
+    const { location, ...restData } = data;
 
     // Set default values
     const propertyData: Partial<IProperty> = {
-      ...data,
+      ...restData,
       ownerId: new Types.ObjectId(userId),
       addressId: new Types.ObjectId(data.addressId),
-      status: PropertyStatus.DRAFT,
+      status: data.status || PropertyStatus.ACTIVE,
       views: 0,
       favorites: 0,
       inquiries: 0,
@@ -70,7 +74,7 @@ export class PropertyService {
       propertyData.location = {
         type: 'Point',
         coordinates: data.location.coordinates
-      };
+      } as { type: 'Point'; coordinates: [number, number] };
     }
 
     const property = await this.propertyRepository.create(propertyData);
@@ -82,9 +86,9 @@ export class PropertyService {
    */
   async getPropertyById(id: string, incrementView: boolean = false): Promise<IProperty> {
     const property = await this.propertyRepository.findById(id);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
     // Increment view count if requested
@@ -100,9 +104,9 @@ export class PropertyService {
    */
   async getPropertyBySlug(slug: string, incrementView: boolean = false): Promise<IProperty> {
     const property = await this.propertyRepository.findBySlug(slug);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
     if (incrementView && property.status === PropertyStatus.ACTIVE) {
@@ -131,25 +135,25 @@ export class PropertyService {
     updateData: UpdatePropertyDTO
   ): Promise<IProperty> {
     const property = await this.propertyRepository.findById(propertyId);
-    
-    if (!property) {
-      throw new Error('Property not found');
-    }
 
+    if (!property) {
+      throw ApiError.notFound('Property not found');
+    }
     // Check ownership
-    if (property.ownerId.toString() !== userId) {
-      throw new Error('You do not have permission to update this property');
+    const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerId !== userId) {
+      throw ApiError.forbidden('You do not have permission to update this property');
     }
 
     // Prevent updating certain fields after property is sold/rented
     if ([PropertyStatus.SOLD, PropertyStatus.RENTED].includes(property.status)) {
-      throw new Error('Cannot update sold or rented property');
+      throw ApiError.badRequest('Cannot update sold or rented property');
     }
 
     const updated = await this.propertyRepository.update(propertyId, updateData);
-    
+
     if (!updated) {
-      throw new Error('Failed to update property');
+      throw ApiError.internal('Failed to update property');
     }
 
     return updated;
@@ -160,14 +164,15 @@ export class PropertyService {
    */
   async deleteProperty(propertyId: string, userId: string): Promise<void> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
     // Check ownership
-    if (property.ownerId.toString() !== userId) {
-      throw new Error('You do not have permission to delete this property');
+    const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerId !== userId) {
+      throw ApiError.forbidden('You do not have permission to delete this property');
     }
 
     // Soft delete by changing status
@@ -179,17 +184,18 @@ export class PropertyService {
    */
   async publishProperty(propertyId: string, userId: string): Promise<IProperty> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
-    if (property.ownerId.toString() !== userId) {
-      throw new Error('You do not have permission to publish this property');
+    const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerId !== userId) {
+      throw ApiError.forbidden('You do not have permission to publish this property');
     }
 
     if (property.status !== PropertyStatus.DRAFT) {
-      throw new Error('Only draft properties can be published');
+      throw ApiError.badRequest('Only draft properties can be published');
     }
 
     // Validate required fields before publishing
@@ -201,7 +207,7 @@ export class PropertyService {
     });
 
     if (!updated) {
-      throw new Error('Failed to publish property');
+      throw ApiError.internal('Failed to publish property');
     }
 
     return updated;
@@ -224,8 +230,8 @@ export class PropertyService {
   /**
    * Get properties by owner
    */
-  async getPropertiesByOwner(ownerId: string, options: PaginationOptions = {}) {
-    return await this.propertyRepository.findByOwner(ownerId, options);
+  async getPropertiesByOwner(ownerId: string, options: PaginationOptions = {}, search?: string, status?: PropertyStatus, listingType?: string) {
+    return await this.propertyRepository.findByOwner(ownerId, options, search, status, listingType);
   }
 
   /**
@@ -240,9 +246,9 @@ export class PropertyService {
    */
   async addToFavorites(propertyId: string): Promise<void> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
     await this.propertyRepository.incrementFavorites(propertyId);
@@ -253,9 +259,9 @@ export class PropertyService {
    */
   async removeFromFavorites(propertyId: string): Promise<void> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
     await this.propertyRepository.decrementFavorites(propertyId);
@@ -310,13 +316,14 @@ export class PropertyService {
     durationDays: number = 30
   ): Promise<IProperty> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
-    if (property.ownerId.toString() !== userId) {
-      throw new Error('You do not have permission to feature this property');
+    const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerId !== userId) {
+      throw ApiError.forbidden('You do not have permission to feature this property');
     }
 
     const featuredUntil = new Date();
@@ -328,7 +335,7 @@ export class PropertyService {
     });
 
     if (!updated) {
-      throw new Error('Failed to feature property');
+      throw ApiError.internal('Failed to feature property');
     }
 
     return updated;
@@ -343,13 +350,14 @@ export class PropertyService {
     durationDays: number = 30
   ): Promise<IProperty> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
-    if (property.ownerId.toString() !== userId) {
-      throw new Error('You do not have permission to make this property premium');
+    const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerId !== userId) {
+      throw ApiError.forbidden('You do not have permission to make this property premium');
     }
 
     const premiumUntil = new Date();
@@ -361,7 +369,7 @@ export class PropertyService {
     });
 
     if (!updated) {
-      throw new Error('Failed to make property premium');
+      throw ApiError.internal('Failed to make property premium');
     }
 
     return updated;
@@ -375,9 +383,9 @@ export class PropertyService {
     verifiedBy: string
   ): Promise<IProperty> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
     const updated = await this.propertyRepository.update(propertyId, {
@@ -387,7 +395,7 @@ export class PropertyService {
     });
 
     if (!updated) {
-      throw new Error('Failed to verify property');
+      throw ApiError.internal('Failed to verify property');
     }
 
     return updated;
@@ -402,19 +410,20 @@ export class PropertyService {
     status: PropertyStatus
   ): Promise<IProperty> {
     const property = await this.propertyRepository.findById(propertyId);
-    
+
     if (!property) {
-      throw new Error('Property not found');
+      throw ApiError.notFound('Property not found');
     }
 
-    if (property.ownerId.toString() !== userId) {
-      throw new Error('You do not have permission to update this property');
+    const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerId !== userId) {
+      throw ApiError.forbidden('You do not have permission to update this property');
     }
 
     const updated = await this.propertyRepository.update(propertyId, { status });
 
     if (!updated) {
-      throw new Error('Failed to update property status');
+      throw ApiError.internal('Failed to update property status');
     }
 
     return updated;
@@ -459,7 +468,7 @@ export class PropertyService {
     }
 
     if (errors.length > 0) {
-      throw new Error(`Property validation failed: ${errors.join(', ')}`);
+      throw ApiError.validationError(errors);
     }
   }
 
@@ -475,10 +484,11 @@ export class PropertyService {
     for (const id of propertyIds) {
       const property = await this.propertyRepository.findById(id);
       if (!property) {
-        throw new Error(`Property ${id} not found`);
+        throw ApiError.notFound(`Property ${id} not found`);
       }
-      if (property.ownerId.toString() !== userId) {
-        throw new Error(`You do not have permission to update property ${id}`);
+      const ownerId = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+      if (ownerId !== userId) {
+        throw ApiError.forbidden(`You do not have permission to update property ${id}`);
       }
     }
 

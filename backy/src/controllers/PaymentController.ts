@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { injectable, inject } from 'inversify';
 import { STRIPE_WEBHOOK_SECRET, STRIPE_API_KEY, SUPPORT_EMAIL } from "../secrets";
-import { CurrencyCode,PaymentProvider, TransactionStatus, TransactionType } from '../models/Payments';
+import { CurrencyCode, PaymentProvider, TransactionStatus, TransactionType } from '../models/Payments';
 import { TYPES } from "../config/types";
 
 import { PaymentService } from '../services/paymentService';
@@ -17,6 +17,7 @@ import { UserService } from '../services/UserService';
 import { IProfileDocument } from '../models/Profile';
 import { PropertyService } from '../services/PropertyService';
 import { PaystackService } from '../services/PaystackServices';
+import { IPaymentRepository } from '../repositories/PaymentRepository';
 
 @injectable()
 export class PaymentController {
@@ -25,6 +26,7 @@ export class PaymentController {
         @inject(TYPES.PropertyService) private propertyService: PropertyService,
         @inject(TYPES.UserService) private userService: UserService,
         @inject(TYPES.PaystackService) private paystackService: PaystackService,
+        @inject(TYPES.PaymentRepository) private paymentRepository: IPaymentRepository,
 
     ) { }
     createPaymentIntent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -40,7 +42,7 @@ export class PaymentController {
         } = req.body;
 
         const email = req.user.email;
-        const userId = req.user._id;
+        const userId = req.user._id.toString();
 
         if (!propertyId) {
             throw ApiError.badRequest('propertyId is required');
@@ -53,7 +55,7 @@ export class PaymentController {
         let amountinNaira = props.pricing.rentPrice;
 
         // extract customer name and email
-        const user = await this.userService.getUserById(userId)
+        const user = await this.userService.getUserById(userId as any)
         if (!user) {
             throw ApiError.notFound('User not found');
         }
@@ -184,11 +186,34 @@ export class PaymentController {
         );
         // Always return 200 to acknowledge receipt
         return res.sendStatus(200);
-        // return res.status(200).json(
-        //   ApiResponse.success(
-        //     result,
-        //     'Webhook processed successfully'
-        //   )
-        // );
-    })
+    });
+
+    getPaymentHistory = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const userId = req.user._id;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const search = req.query.search as string;
+        const status = req.query.status as string;
+
+        const result = await this.paymentRepository.getUserPaymentHistory(
+            userId.toString(),
+            page,
+            limit,
+            search,
+            status
+        );
+
+        return res.status(200).json(
+            ApiResponse.paginated(
+                result.data,
+                {
+                    page,
+                    limit,
+                    total: result.total,
+                    pages: Math.ceil(result.total / limit)
+                },
+                'Payment history retrieved successfully'
+            )
+        );
+    });
 }

@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { AddressModel, IAddress, AddressType } from '../models/Address';
-import { FilterQuery, UpdateQuery, Types } from 'mongoose';
+import { FilterQuery, UpdateQuery } from 'mongoose';
 
 @injectable()
 export class AddressRepository {

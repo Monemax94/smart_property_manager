@@ -16,24 +16,30 @@ export class AddressController {
   ) { }
 
   createAddress = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    /* #swagger.tags = ['Address'] */
+    /* #swagger.summary = 'Create user address' */
+
     const userId = req.user._id;
     const address = await this.addressService.createAddress({ ...req.body, userId });
-    
+
     res.status(201).json(new ApiResponse(201, address, 'Address created successfully'));
   });
 
   getUserAddresses = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    /* #swagger.tags = ['Address'] */
+    /* #swagger.summary = 'Retrieve all addresses for current user' */
+
     const addresses = await this.addressService.getUserAddresses(req.user.id);
-    
+
     res.json(new ApiResponse(200, addresses, 'User addresses retrieved successfully'));
   });
 
   getDefaultAddress = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     // Validate query parameters
     const { error, value } = defaultAddressQuerySchema.validate(req.query);
-    
+
     if (error) {
-      return res.status(400).json( ApiError.badRequest(
+      return res.status(400).json(ApiError.badRequest(
         'Invalid query parameters',
         error.details.map(d => ({
           field: d.path.join('.'),
@@ -46,7 +52,7 @@ export class AddressController {
     const address = await this.addressService.getDefaultAddress(req.user.id, type);
 
     if (!address) {
-      return res.status(404).json( ApiError.notFound(
+      return res.status(404).json(ApiError.notFound(
         'Default address not found',
         {
           requestedType: type,
@@ -61,21 +67,21 @@ export class AddressController {
 
   updateAddress = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const address = await this.addressService.updateAddress(req.params.id, req.body);
-    
+
     if (!address) {
-      return res.status(404).json( ApiError.notFound('Address not found'));
+      return res.status(404).json(ApiError.notFound('Address not found'));
     }
-    
+
     res.json(new ApiResponse(200, address, 'Address updated successfully'));
   });
 
   deleteAddress = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const deleted = await this.addressService.deleteAddress(req.params.id);
-    
+
     if (!deleted) {
-      return res.status(404).json( ApiError.notFound('Address not found'));
+      return res.status(404).json(ApiError.notFound('Address not found'));
     }
-    
+
     res.json(new ApiResponse(200, { deleted }, 'Address deleted successfully'));
   });
 }
