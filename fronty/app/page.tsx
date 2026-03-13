@@ -186,7 +186,7 @@ export default function HomePage() {
               <h2 className="text-6xl font-black text-gray-900 mt-4 tracking-tighter uppercase">Recently <br /><span className="text-primary italic">Handpicked</span></h2>
             </div>
             <p className="text-gray-500 max-w-sm font-medium text-lg leading-relaxed">
-              Discover the latest additions to our exclusive smart home collective, vetted for quality and innovation.
+              Discover the latest additions to our exclusive smart home collections, vetted for quality and innovation.
             </p>
           </div>
 
@@ -233,9 +233,9 @@ export default function HomePage() {
               <h2 className="text-5xl font-black text-white mb-16 text-center uppercase tracking-tighter">Voices Of Our <span className="text-white/40 italic">Community</span></h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
-                  { text: "SmartHome made finding my apartment so easy. The technology integration is seamless!", author: "Sarah Johnson", role: "Resident" },
-                  { text: "As a vendor, listing properties here has doubled my inquiries. Highly professional platform.", author: "Marcus Thompson", role: "Real Estate Agent" },
-                  { text: "The crimson design is beautiful and the user experience is unlike any other app in Nigeria.", author: "Bello Ahmed", role: "Property Owner" }
+                  { text: "SmartHome made finding my apartment so easy. The technology integration is seamless!", author: "Agwu Kenneth", role: "Resident" },
+                  { text: "As a vendor, listing properties here has doubled my inquiries. Highly professional platform.", author: "Nwevo Peace", role: "Real Estate Agent" },
+                  { text: "The crimson design is beautiful and the user experience is unlike any other app in Nigeria.", author: "Ugbo Angela", role: "Property Owner" }
                 ].map((t, i) => (
                   <div key={i} className="bg-white/10 backdrop-blur-lg p-10 rounded-[2rem] border border-white/10 flex flex-col justify-between hover:bg-white/15 transition-all">
                     <p className="text-white text-xl font-medium leading-relaxed mb-8 italic">"{t.text}"</p>
@@ -282,8 +282,8 @@ export default function HomePage() {
           <div>
             <h4 className="font-black mb-8 uppercase text-xs tracking-[0.3em] text-gray-600">Connect</h4>
             <ul className="space-y-4 text-gray-400 font-bold">
-              <li>Lagos, Nigeria</li>
-              <li>+234 800 SMARTHOME</li>
+              <li>Abakaliki, Nigeria</li>
+              <li>+234 7030489608 SMARTHOME</li>
               <li>info@smarthome.ng</li>
             </ul>
           </div>

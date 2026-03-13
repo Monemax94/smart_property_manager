@@ -67,7 +67,7 @@ export default function DashboardStats({ onNotify }: DashboardStatsProps) {
         { label: 'Total Properties', value: stats?.total || 0, trend: 'Managed by you', color: 'border-primary' },
         { label: 'Active Listings', value: stats?.active || 0, trend: 'Live on market', color: 'border-green-500' },
         { label: 'Featured', value: stats?.featured || 0, trend: 'Premium visibility', color: 'border-yellow-500' },
-        { label: 'Average Price', value: `$${stats?.avgPrice?.toLocaleString() || 0}`, trend: 'Market value', color: 'border-blue-500' },
+        { label: 'Average Price', value: `₦${stats?.avgPrice?.toLocaleString() || 0}`, trend: 'Market value per month', color: 'border-blue-500' },
     ];
 
     return (
