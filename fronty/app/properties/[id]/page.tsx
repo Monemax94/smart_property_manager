@@ -50,6 +50,7 @@ export default function PropertyDetailsPage() {
     const [property, setProperty] = useState<PropertyDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
         if (!id) return;
@@ -149,14 +150,14 @@ export default function PropertyDetailsPage() {
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{property.title}</h1>
+                            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">{property.title}</h1>
                             <p className="text-gray-500 mt-1 font-medium">
                                 {property.addressId?.street}, {property.addressId?.city}, {property.addressId?.state}
                             </p>
                         </div>
                         <div className="bg-white px-8 py-4 rounded-2xl shadow-sm border border-gray-100 text-right">
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Pricing Guide</p>
-                            <div className="text-3xl font-black text-primary">
+                            <div className="text-2xl md:text-3xl font-black text-primary">
                                 {property.pricing.currency} {price.toLocaleString()}
                                 {isRent && <span className="text-sm font-bold text-gray-400"> / mo</span>}
                             </div>
@@ -167,16 +168,57 @@ export default function PropertyDetailsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Images & Details */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Hero Image */}
+                        {/* Hero Image Carousel */}
                         <div className="relative h-[500px] w-full rounded-3xl overflow-hidden shadow-2xl group">
-                            <Image
-                                src={property.images[0]?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80'}
-                                alt={property.title}
-                                layout="fill"
-                                objectFit="cover"
-                                className="group-hover:scale-105 transition-transform duration-700"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                            {property.images && property.images.length > 0 ? (
+                                <>
+                                    <Image
+                                        src={property.images[currentImageIndex]?.url}
+                                        alt={property.title}
+                                        layout="fill"
+                                        objectFit="cover"
+                                        className="transition-all duration-700 ease-in-out"
+                                        key={currentImageIndex}
+                                    />
+                                    
+                                    {/* Navigation Buttons */}
+                                    {property.images.length > 1 && (
+                                        <>
+                                            <button 
+                                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length)}
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 border border-white/30"
+                                            >
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                                            </button>
+                                            <button 
+                                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % property.images.length)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 border border-white/30"
+                                            >
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                                            </button>
+                                            
+                                            {/* Indicators */}
+                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                                                {property.images.map((_, idx) => (
+                                                    <button 
+                                                        key={idx}
+                                                        onClick={() => setCurrentImageIndex(idx)}
+                                                        className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentImageIndex ? 'w-8 bg-primary' : 'w-2 bg-white/50'}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <Image
+                                    src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80"
+                                    alt={property.title}
+                                    layout="fill"
+                                    objectFit="cover"
+                                />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
                         </div>
 
                         {/* Quick Stats Grid */}
@@ -190,8 +232,8 @@ export default function PropertyDetailsPage() {
                         </div>
 
                         {/* Description */}
-                        <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
-                            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100">
+                            <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                                 <span className="w-1.5 h-6 bg-primary rounded-full"></span>
                                 Property Overview
                             </h3>
@@ -202,8 +244,8 @@ export default function PropertyDetailsPage() {
 
                         {/* Videos (if any) */}
                         {property.videos && property.videos.length > 0 && (
-                            <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
-                                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100">
+                                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                                     <span className="w-1.5 h-6 bg-primary rounded-full"></span>
                                     Property Walk-Through
                                 </h3>
@@ -225,8 +267,8 @@ export default function PropertyDetailsPage() {
 
                         {/* Nearby Facilities */}
                         {property.nearbyFacilities && Object.values(property.nearbyFacilities).some(arr => arr && arr.length > 0) && (
-                            <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100">
-                                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100">
+                                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                                     <span className="w-1.5 h-6 bg-primary rounded-full"></span>
                                     Nearby Popular Facilities
                                 </h3>
@@ -291,8 +333,8 @@ export default function PropertyDetailsPage() {
                         </div>
 
                         {/* CTA Card */}
-                        <div className="bg-primary p-8 rounded-3xl shadow-2xl shadow-primary/20 text-white sticky top-24">
-                            <h3 className="text-2xl font-black mb-4 tracking-tight leading-tight">Interested in this property?</h3>
+                        <div className="bg-primary p-6 md:p-8 rounded-3xl shadow-2xl shadow-primary/20 text-white sticky top-24">
+                            <h3 className="text-xl md:text-2xl font-black mb-4 tracking-tight leading-tight">Interested in this property?</h3>
                             <p className="text-white/80 text-sm mb-8 leading-relaxed font-medium">
                                 Start the process today. Our automated system will guide you through the next steps and connect you with the owner.
                             </p>

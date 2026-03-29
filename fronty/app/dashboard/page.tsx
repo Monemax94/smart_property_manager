@@ -41,10 +41,10 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-background p-8 transition-colors duration-300">
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-10 gap-4">
                     <div className="space-y-1">
-                        <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Dashboard Overview</h1>
-                        <p className="text-muted-text font-medium text-sm">Welcome back! Manage your listings and track performance.</p>
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">Dashboard Overview</h1>
+                        <p className="text-muted-text font-medium text-xs md:text-sm">Welcome back! Manage your listings and track performance.</p>
                     </div>
                     {['admin', 'superadmin'].includes(user?.role) && (
                         <Link href="/properties/new" className="bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-xl font-bold shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all active:translate-y-0 text-sm tracking-tight flex items-center gap-2">
@@ -68,8 +68,10 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                {/* Statistics Cards */}
-                <DashboardStats onNotify={showAlert} />
+                {/* Statistics Cards for Admins */}
+                {['admin', 'superadmin'].includes(user?.role) && (
+                    <DashboardStats onNotify={showAlert} />
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Recent Activity Feed */}

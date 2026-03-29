@@ -41,8 +41,12 @@ export default function NewPropertyPage() {
             const res = await axios.get('http://127.0.0.1:8080/api/addresses', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Handle ApiResponse wrap
-            const addressData = res.data.data.data || [];
+            // Handle ApiResponse wrap robustly
+            const responseData = res.data?.data || res.data;
+            const addressData = Array.isArray(responseData) ? responseData : (responseData?.data || []);
+            
+            console.log('Fetched properties/new addresses:', addressData);
+            
             setAddresses(addressData);
             if (addressData.length > 0) {
                 setFormData(prev => ({ ...prev, addressId: addressData[0]._id }));

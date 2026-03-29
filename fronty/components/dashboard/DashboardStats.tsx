@@ -37,12 +37,21 @@ export default function DashboardStats({ onNotify }: DashboardStatsProps) {
                 });
                 setStats(res.data?.data?.data || null);
             } catch (err: any) {
-                console.error('Failed to fetch stats', err);
+                // Gracefully handle 403 Forbidden (e.g., non-admin/vendor users)
+                if (err.response?.status === 403) {
+                    setStats(null);
+                    setLoading(false);
+                    return;
+                }
+
                 if (err.response?.status === 401) {
                     clearSession();
                     router.push('/login');
                     return;
                 }
+
+                console.error('Failed to fetch stats', err);
+
                 if (onNotify) {
                     onNotify('error', err.response?.data?.message || 'Failed to fetch dashboard statistics');
                 }
@@ -51,7 +60,7 @@ export default function DashboardStats({ onNotify }: DashboardStatsProps) {
             }
         };
         fetchStats();
-    }, []);
+    }, [router, onNotify]);
 
     if (loading) {
         return (
@@ -63,11 +72,14 @@ export default function DashboardStats({ onNotify }: DashboardStatsProps) {
         );
     }
 
+    // Don't render if stats are not available (e.g., unauthorized)
+    if (!stats) return null;
+
     const statCards = [
-        { label: 'Total Properties', value: stats?.total || 0, trend: 'Managed by you', color: 'border-primary' },
-        { label: 'Active Listings', value: stats?.active || 0, trend: 'Live on market', color: 'border-green-500' },
-        { label: 'Featured', value: stats?.featured || 0, trend: 'Premium visibility', color: 'border-yellow-500' },
-        { label: 'Average Price', value: `$${stats?.avgPrice?.toLocaleString() || 0}`, trend: 'Market value', color: 'border-blue-500' },
+        { label: 'Total Properties', value: stats.total || 0, trend: 'Managed by you', color: 'border-primary' },
+        { label: 'Active Listings', value: stats.active || 0, trend: 'Live on market', color: 'border-green-500' },
+        { label: 'Featured', value: stats.featured || 0, trend: 'Premium visibility', color: 'border-yellow-500' },
+        { label: 'Average Price', value: `$${stats.avgPrice?.toLocaleString() || 0}`, trend: 'Market value', color: 'border-blue-500' },
     ];
 
     return (

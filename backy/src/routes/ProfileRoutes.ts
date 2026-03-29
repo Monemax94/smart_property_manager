@@ -8,6 +8,7 @@ import { authenticate } from '../middleware/authMiddleware';
 import { validateBody } from '../middleware/bodyValidate';
 import { updateApplicationPreferenceSchema, updateNotificationPreferenceSchema } from '../validations/preferenceValidations';
 import { resetPasswordSchema, setPinSchema } from '../validations/userValidations';
+import { applyForLandlord, approveApplication, getMyApplicationStatus } from '../controllers/VerificationController';
 
 class ProfileRoutes {
   private router: Router;
@@ -58,6 +59,11 @@ class ProfileRoutes {
     this.router.post('/two-factor/disable', authenticate, this.controller.disableTwoFactor);
     // Check 2FA status
     this.router.get('/two-factor/status', authenticate, this.controller.getTwoFactorStatus);
+
+    // Landlord/Agent Application
+    this.router.post('/apply-landlord', authenticate, applyForLandlord);
+    this.router.get('/apply-landlord/status', authenticate, getMyApplicationStatus);
+    this.router.post('/apply-landlord/:id/approve', authenticate, approveApplication);
   }
 
   public getRouter(): Router {

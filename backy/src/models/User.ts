@@ -8,7 +8,8 @@ export enum UserRole {
     CUSTOMER = 'tenant',
     VENDOR = 'vendor',
     ADMIN = 'admin',
-    SUPER_ADMIN = 'superadmin'
+    SUPER_ADMIN = 'superadmin',
+    AGENT = 'agent'
 }
 
 export enum UserStatus {
@@ -198,7 +199,8 @@ userSchema.pre('save', async function (next) {
                 [UserRole.CUSTOMER]: 'CUS',
                 [UserRole.VENDOR]: 'VEN',
                 [UserRole.ADMIN]: 'ADM',
-                [UserRole.SUPER_ADMIN]: 'SUP'
+                [UserRole.SUPER_ADMIN]: 'SUP',
+                [UserRole.AGENT]: 'AGT'
             };
 
             let uniqueID = '';
