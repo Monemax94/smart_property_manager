@@ -44,13 +44,16 @@ export class PropertyService {
    * Create a new property listing
    */
   async createProperty(userId: string, data: CreatePropertyDTO): Promise<IProperty> {
+    console.log("Service: createProperty logic started", { ownerId: data.ownerId, userId });
     // Validate ownership
     if (data.ownerId !== userId) {
+      console.warn("Service: Ownership validation failed", { data_owner: data.ownerId, userId });
       throw ApiError.forbidden('You can only create properties for yourself');
     }
 
     // Validate required fields
     if (!data.images || data.images.length === 0) {
+      console.warn("Service: Images validation failed");
       throw ApiError.badRequest('At least one image is required');
     }
 
@@ -284,13 +287,18 @@ export class PropertyService {
     filters: Partial<PropertySearchFilters> = {},
     limit: number = 20
   ): Promise<IProperty[]> {
-    return await this.propertyRepository.findNearby(
-      latitude,
-      longitude,
-      maxDistance,
-      filters,
-      limit
-    );
+    try {
+      return await this.propertyRepository.findNearby(
+        latitude,
+        longitude,
+        maxDistance,
+        filters,
+        limit
+      );
+    } catch (error: any) {
+      console.error("PropertyService.searchNearby error:", error.message || error);
+      throw error;
+    }
   }
 
   /**
@@ -426,6 +434,37 @@ export class PropertyService {
       throw ApiError.internal('Failed to update property status');
     }
 
+    return updated;
+  }
+
+  async scheduleMeet(propertyId: string, userId: string, date: Date): Promise<IProperty> {
+    const property = await this.propertyRepository.findById(propertyId);
+    if (!property) throw ApiError.notFound('Property not found');
+
+    const scheduleObj = {
+        date,
+        timeSlot: '12:00 PM',
+        isBooked: true,
+        bookedBy: new Types.ObjectId(userId)
+    };
+
+    property.viewingSchedule = property.viewingSchedule || [];
+    property.viewingSchedule.push(scheduleObj as any);
+
+    const updated = await this.propertyRepository.update(propertyId, { viewingSchedule: property.viewingSchedule });
+    if (!updated) throw ApiError.internal('Failed to schedule meet');
+    return updated;
+  }
+
+  async assignAgent(propertyId: string, ownerId: string, agentId: string): Promise<IProperty> {
+    const property = await this.propertyRepository.findById(propertyId);
+    if (!property) throw ApiError.notFound('Property not found');
+    
+    const ownerIdStr = (property.ownerId as any)._id?.toString() || property.ownerId.toString();
+    if (ownerIdStr !== ownerId) throw ApiError.forbidden('Only the owner can assign an agent');
+
+    const updated = await this.propertyRepository.update(propertyId, { agentId: new Types.ObjectId(agentId) });
+    if (!updated) throw ApiError.internal('Failed to assign agent');
     return updated;
   }
 

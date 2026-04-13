@@ -37,9 +37,10 @@ export class PropertyController {
       }
 
       const propertyData: CreatePropertyDTO = req.body;
+      console.log("Creating property with data:", JSON.stringify(propertyData, null, 2));
 
       const property = await this.propertyService.createProperty(
-        req.user.id,
+        req.user.id || req.user._id.toString(),
         propertyData
       );
 
@@ -48,7 +49,8 @@ export class PropertyController {
         message: 'Property created successfully',
         data: property
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("PropertyController.createProperty catch error:", error.message || error);
       next(error);
     }
   };
@@ -664,15 +666,6 @@ export class PropertyController {
         return;
       }
 
-      // Check if user is admin (implement your own role check)
-      if (req.user.role !== 'admin') {
-        res.status(403).json({
-          success: false,
-          message: 'Only administrators can verify properties'
-        });
-        return;
-      }
-
       const { id } = req.params;
 
       const property = await this.propertyService.verifyProperty(id, req.user.id);
@@ -682,6 +675,44 @@ export class PropertyController {
         message: 'Property verified successfully',
         data: property
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  assignAgent = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+      const { id } = req.params;
+      const { agentId } = req.body;
+      const property = await this.propertyService.assignAgent(id, req.user.id, agentId);
+      res.status(200).json({ success: true, message: 'Agent assigned successfully', data: property });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  scheduleMeet = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+      const { id } = req.params;
+      const { meetingDate } = req.body;
+      const property = await this.propertyService.scheduleMeet(id, req.user.id, new Date(meetingDate));
+      res.status(200).json({ success: true, message: 'Meeting scheduled', data: property });
     } catch (error) {
       next(error);
     }

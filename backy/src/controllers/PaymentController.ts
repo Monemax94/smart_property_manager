@@ -18,6 +18,8 @@ import { IProfileDocument } from '../models/Profile';
 import { PropertyService } from '../services/PropertyService';
 import { PaystackService } from '../services/PaystackServices';
 import { IPaymentRepository } from '../repositories/PaymentRepository';
+import { ApplicationRepository } from '../repositories/ApplicationRepository';
+import { ApplicationStatus } from '../models/Application';
 
 @injectable()
 export class PaymentController {
@@ -27,7 +29,7 @@ export class PaymentController {
         @inject(TYPES.UserService) private userService: UserService,
         @inject(TYPES.PaystackService) private paystackService: PaystackService,
         @inject(TYPES.PaymentRepository) private paymentRepository: IPaymentRepository,
-
+        @inject(TYPES.ApplicationRepository) private applicationRepository: ApplicationRepository,
     ) { }
     createPaymentIntent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
         /* #swagger.tags = ['Payment'] */
@@ -50,7 +52,17 @@ export class PaymentController {
 
         const props = await this.propertyService.getPropertyById(propertyId);
         if (!props) {
-            throw ApiError.notFound('Order not found');
+            throw ApiError.notFound('Property not found');
+        }
+
+        // If it's a rental, check for approved application
+        if (props.listingType === 'for_rent' || props.pricing.rentPrice) {
+            const applications = await this.applicationRepository.findByTenant(userId);
+            const app = applications.find(a => a.propertyId._id.toString() === propertyId && a.status === ApplicationStatus.PAYMENT_PENDING);
+            
+            if (!app) {
+                throw ApiError.badRequest('You must have an approved application to pay rent for this property');
+            }
         }
         let amountinNaira = props.pricing.rentPrice;
 

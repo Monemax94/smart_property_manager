@@ -4,7 +4,7 @@ import { TYPES } from '../config/types';
 import { PropertyController } from '../controllers/PropertyController';
 import { createAddressSchema, updateAddressSchema } from "../validations/addressValidations"
 import { validateBody } from '../middleware/bodyValidate';
-import { authenticate, requireAdmin } from '../middleware/authMiddleware';
+import { authenticate, requireAdmin, requireManagement } from '../middleware/authMiddleware';
 import { upload } from '../config/multer.config';
 import { uploadToCloudinary } from '../middleware/cloudinaryUploads';
 
@@ -22,8 +22,8 @@ class PropertyRoutes {
   private initializeRoutes(): void {
 
     // Admin/Owner Management Protected routes (Specific routes first)
-    this.router.get('/statistics', authenticate, requireAdmin, this.controller.getStatistics);
-    this.router.get('/my-properties', authenticate, requireAdmin, this.controller.getMyProperties);
+    this.router.get('/statistics', authenticate, requireManagement, this.controller.getStatistics);
+    this.router.get('/my-properties', authenticate, requireManagement, this.controller.getMyProperties);
 
     // Public routes (No auth needed or just basic auth)
     this.router.get('/search', this.controller.searchProperties);
@@ -37,10 +37,11 @@ class PropertyRoutes {
     // Basic Protected routes (Require login only)
     this.router.post('/:id/favorite', authenticate, this.controller.addToFavorites);
     this.router.delete('/:id/favorite', authenticate, this.controller.removeFromFavorites);
+    this.router.post('/:id/schedule', authenticate, this.controller.scheduleMeet);
 
     // Default middlewares for remaining management routes
     this.router.use(authenticate);
-    this.router.use(requireAdmin);
+    this.router.use(requireManagement);
 
     this.router.post('/',
       upload.fields([
@@ -70,6 +71,7 @@ class PropertyRoutes {
       this.controller.createProperty
     );
     this.router.put('/:id', this.controller.updateProperty);
+    this.router.put('/:id/assign-agent', this.controller.assignAgent);
     this.router.delete('/:id', this.controller.deleteProperty);
     this.router.post('/:id/publish', this.controller.publishProperty);
     this.router.post('/:id/sold', this.controller.markAsSold);

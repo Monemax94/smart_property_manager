@@ -171,4 +171,13 @@ container.bind<ActivityLogController>(TYPES.ActivityLogController)
   .to(ActivityLogController)
   .inSingletonScope();
 
+// Application bindings
+import { ApplicationRepository } from '../repositories/ApplicationRepository';
+import { ApplicationService } from '../services/ApplicationService';
+import { ApplicationController } from '../controllers/ApplicationController';
+
+container.bind<ApplicationRepository>(TYPES.ApplicationRepository).to(ApplicationRepository);
+container.bind<ApplicationService>(TYPES.ApplicationService).to(ApplicationService);
+container.bind<ApplicationController>(TYPES.ApplicationController).to(ApplicationController);
+
 export { container };

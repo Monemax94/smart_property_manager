@@ -15,6 +15,8 @@ import { ApiError } from '../utils/ApiError';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../config/types';
 import { IPaymentRepository } from '../repositories/PaymentRepository';
+import { ApplicationModel } from '../models/Application';
+import { PropertyModel } from '../models/Property';
 
 
 
@@ -27,10 +29,10 @@ export class PaystackService {
 
   private getRequestConfig() {
     // Ensure PAYSTACK_API_URL is not overriding the default incorrectly
-    const baseURL = process.env.PAYSTACK_API_URL || 'https://api.paystack.co';
+    const baseURL = PAYSTACK_API_URL || 'https://api.paystack.co';
 
     // Test secret key format (should start with 'sk_' or 'sk_test_')
-    const secretKey = process.env.PAYSTACK_SECRET_KEY?.trim();
+    const secretKey = PAYSTACK_SECRET_KEY?.trim();
 
     if (!secretKey) {
       throw new Error('PAYSTACK_SECRET_KEY is not set');
@@ -69,12 +71,14 @@ async initializePayment(
 ): Promise<PaystackInitializeResponse> {
   try {
     const config = this.getRequestConfig();
-    const payload = {
+    const payload: any = {
       email,
       amount: Math.ceil(amount * 100),
       metadata,
-      callback_url: callbackUrl,
     };
+    if (callbackUrl) {
+      payload.callback_url = callbackUrl;
+    }
 
     console.log('Sending to Paystack:', {
       url: `${config.baseURL}/transaction/initialize`,
@@ -109,11 +113,15 @@ async initializePayment(
     return response.data;
     
   } catch (error: any) {
-    console.error('Paystack API Error Response:', error.response?.data || error.message);
-    const errorMessage = error.response?.data?.message || 'Paystack initialization failed';
+    console.error('Paystack initialization error details:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    const errorMessage = error.response?.data?.message || error.message || 'Paystack initialization failed';
     logger.error(`Paystack initialization failed for ${email}: ${errorMessage}`, {
       amount,
-      keyUsed: PAYSTACK_SECRET_KEY ? `${PAYSTACK_SECRET_KEY.substring(0, 10)}...` : 'not-found'
+      keyUsed: process.env.PAYSTACK_SECRET_KEY ? `${process.env.PAYSTACK_SECRET_KEY.substring(0, 10)}...` : 'not-found'
     });
     
     // This throws an error, which is fine - it doesn't need to return
@@ -175,8 +183,11 @@ async initializePayment(
   async handleWebhookEvent(event: PaystackWebhookEvent, signature: string, rawBody: Buffer) {
     // Verify webhook signature first
     if (!this.verifyWebhookSignature(rawBody, signature)) {
+      console.error('Webhook signature verification failed');
       throw ApiError.badRequest('Invalid webhook signature');
     }
+
+    console.log('Webhook Event Data:', JSON.stringify(event, null, 2));
 
     try {
       switch (event.event) {
@@ -203,7 +214,7 @@ async initializePayment(
    * Handle successful payment
    */
   private async handlePaymentSuccess(data: PaystackWebhookEvent['data']) {
-    const metadata = data.metadata as { propertyId?: string, userId?: string };
+    const metadata = data.metadata as { propertyId?: string, userId?: string, applicationId?: string };
 
     if (!metadata.propertyId) {
       throw ApiError.badRequest('propertyId must be provided in metadata');
@@ -217,10 +228,10 @@ async initializePayment(
 
 
       const payment = await PaymentTransactionModel.findOneAndUpdate(
-        { reference: data.reference },
+        { transactionId: data.reference },
         {
           $setOnInsert: {
-            reference: data.reference,
+            transactionId: data.reference,
             provider: PaymentProvider.PAYSTACK,
             currency: data.currency || CurrencyCode.NGN,
             metadata: data.metadata,
@@ -246,6 +257,17 @@ async initializePayment(
 
       await session.commitTransaction();
 
+      if (metadata.applicationId) {
+        await ApplicationModel.findByIdAndUpdate(metadata.applicationId, {
+          paymentStatus: 'completed'
+        });
+      }
+
+      // Mark property as reserved
+      await PropertyModel.findByIdAndUpdate(propertyId, {
+        status: 'reserved'
+      });
+
       logger.info(`Payment succeeded for property: ${propertyId}`);
       return payment;
     } catch (error) {
@@ -262,7 +284,7 @@ async initializePayment(
    */
   private async handlePaymentFailed(data: PaystackWebhookEvent['data']) {
     await PaymentTransactionModel.findOneAndUpdate(
-      { reference: data.reference },
+      { transactionId: data.reference },
       {
         status: TransactionStatus.Failed,
         failureReason: 'Payment failed',
@@ -336,6 +358,7 @@ async initializePayment(
       const metadata = verification.data.metadata as {
         userId?: string;
         propertyId?: string;
+        applicationId?: string;
       };
 
       const propertyId = metadata.propertyId ? new Types.ObjectId(metadata.propertyId) : null;
@@ -369,6 +392,16 @@ async initializePayment(
 
       if (!payment) {
         throw ApiError.validationError('Failed to create or update payment record');
+      }
+
+      if (metadata.applicationId) {
+        await ApplicationModel.findByIdAndUpdate(metadata.applicationId, {
+          paymentStatus: 'completed'
+        });
+      }
+
+      if (propertyId) {
+        await PropertyModel.findByIdAndUpdate(propertyId, { status: 'reserved' });
       }
 
       // Get populated payment

@@ -198,6 +198,45 @@ export class AuthController {
     return res.status(201).json(ApiResponse.created({ success: true }, 'Registration successful'));
   });
 
+  registerAgent = asyncHandler(async (req: Request, res: Response) => {
+    const { firstName, lastName, dob, ...value } = req.body;
+
+    if (!value.email) {
+      return res.status(400).json(
+        ApiError.badRequest('Email is required')
+      )
+    }
+
+    const validateTokenVerification = await this.tokenService.getUsedTokenForUser(value.email);
+    if (!validateTokenVerification) {
+      return res.status(400).json(
+        ApiError.badRequest('Please complete token validation for your account')
+      )
+    }
+
+    const user = await this.authService.register({ ...value, role: UserRole.AGENT });
+    await this.profileService.updateProfileByUserId(user._id.toString(), { firstName, lastName, dob });
+
+    if (!user) {
+      return res.status(500).json(
+        ApiError.internal('User registration failed')
+      )
+    }
+
+    await this.tokenService.deleteToken(value.email);
+    await this.activityService.logActivity({
+      title: 'Agent Registration',
+      description: `${user.email} registered on the platform as an agent`,
+      activityType: ActivityType.CUSTOMER_REGISTRATION,
+      user: user._id,
+      metadata: {
+        alertLevel: AlertLevel.SUCCESS,
+      },
+      icon: ActivityIcon.USER_PLUS
+    });
+    return res.status(201).json(ApiResponse.created({ success: true }, 'Agent registration successful'));
+  });
+
   registerFinalization = asyncHandler(async (req: Request, res: Response) => {
     const { email, ...others } = req.body;
 

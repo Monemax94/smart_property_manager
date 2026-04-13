@@ -31,7 +31,7 @@ async function seed() {
         });
         await newProfile.save();
         
-        user.profile = newProfile._id;
+        user.profile = newProfile._id as any;
         await user.save();
         
         console.log('Successfully seeded new admin!');

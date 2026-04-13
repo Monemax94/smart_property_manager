@@ -14,19 +14,14 @@ class UserRoutes {
   }
 
   private initializeRoutes(): void {
-    // GET endpoints
-    this.router.get('/email/:email', (req, res) => 
-      this.controller.execute(req, res));
-    this.router.get('/active', (req, res) => 
-      this.controller.execute(req, res));
+    this.router.get('/email/:email', this.controller.getUserByEmail);
+    this.router.get('/active', this.controller.getActiveUsers);
+    this.router.get('/agents', this.controller.getAgents);
 
     // PATCH endpoints
-    this.router.patch('/verify/:userId', (req, res) => 
-      this.controller.execute(req, res));
-    this.router.patch('/deactivate/:userId', (req, res) => 
-      this.controller.execute(req, res));
-    this.router.patch('/password/:userId', (req, res) => 
-      this.controller.execute(req, res));
+    this.router.patch('/verify/:userId', this.controller.verifyUser);
+    this.router.patch('/deactivate/:userId', this.controller.deactivateAccount);
+    this.router.patch('/password/:userId', this.controller.updatePassword);
   }
 
   public getRouter(): Router {

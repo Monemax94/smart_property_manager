@@ -45,6 +45,11 @@ class AuthRoutes {
             this.controller.registerVendor
         );
         this.router.post(
+            '/register-agent',
+            validateBody(userBaseSchema), // Agent uses standard user schema initially
+            this.controller.registerAgent
+        );
+        this.router.post(
             '/register-addon',
             validateBody(updateUserSettingsSchema),
             this.controller.registerFinalization

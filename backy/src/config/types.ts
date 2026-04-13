@@ -149,4 +149,9 @@ export const TYPES = {
     TwoFactorRepository: Symbol.for('TwoFactorRepository'),
     TwoFactorService: Symbol.for('TwoFactorService'),
     TwoFactorController: Symbol.for('TwoFactorController'),
+
+    // Application
+    ApplicationRepository: Symbol.for('ApplicationRepository'),
+    ApplicationService: Symbol.for('ApplicationService'),
+    ApplicationController: Symbol.for('ApplicationController')
 };

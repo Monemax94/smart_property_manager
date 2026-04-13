@@ -13,10 +13,20 @@ export interface IPaymentRepository {
   update(filter: FilterQuery<IPaymentTransaction>, update: UpdateQuery<IPaymentTransaction>): Promise<IPaymentTransaction | null>;
   getPaymentsByOrderIds(orderIds: Types.ObjectId[]): Promise<IPaymentTransaction[]>;
   getUserPaymentHistory(userId: string, page: number, limit: number, search?: string, status?: string): Promise<{ data: IPaymentTransaction[]; total: number }>;
+  findById(id: string): Promise<IPaymentTransaction | null>;
+  findByOrderId(orderId: string): Promise<IPaymentTransaction[]>;
 }
 
 @injectable()
 export class PaymentRepository implements IPaymentRepository {
+  async findById(id: string): Promise<IPaymentTransaction | null> {
+    return await PaymentTransactionModel.findById(id);
+  }
+
+  async findByOrderId(orderId: string): Promise<IPaymentTransaction[]> {
+    return await PaymentTransactionModel.find({ orders: orderId });
+  }
+
   async create(paymentData: IPaymentTransaction): Promise<IPaymentTransaction> {
 
 

@@ -118,3 +118,4 @@ export const requireAdmin = authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
 export const requireVendor = authorize([UserRole.VENDOR]);
 export const requireCustomer = authorize([UserRole.CUSTOMER]);
 export const requireSuperAdmin = authorize([UserRole.SUPER_ADMIN]);
+export const requireManagement = authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.VENDOR, UserRole.AGENT]);

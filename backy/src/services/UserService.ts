@@ -47,6 +47,10 @@ export class UserService {
   async getAllActiveUsers(): Promise<IUser[]> {
     return this.userRepo.getActiveUsers();
   }
+  
+  async getAgents(): Promise<IUserDocument[]> {
+    return await UserModel.find({ role: UserRole.AGENT }).populate('profile').exec();
+  }
   async findById(userId: Types.ObjectId): Promise<IUserDocument> {
     return this.userRepo.findById(userId.toString());
   }

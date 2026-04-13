@@ -92,7 +92,11 @@ export class UserController extends BaseController {
 
   getActiveUsers = asyncHandler(async (req: Request, res: Response) => {
     const users = await this.userService.getAllActiveUsers();
-    
     res.json(new ApiResponse(200, users, 'Active users retrieved successfully'));
+  });
+
+  getAgents = asyncHandler(async (req: Request, res: Response) => {
+    const agents = await this.userService.getAgents();
+    res.json(new ApiResponse(200, agents, 'Agents retrieved successfully'));
   });
 }

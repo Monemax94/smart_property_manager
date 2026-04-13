@@ -14,6 +14,7 @@ import ActivityLogRoutes from './routes/ActivityLogRoutes';
 import AddressRoutes from './routes/AddressRoutes';
 import PaymentRoutes from './routes/WebHook';
 import WishlistRoutes from './routes/WishlistRoutes';
+import ApplicationRoutes from './routes/ApplicationRoutes';
 
 import CarouselRoutes from './routes/CarouselRoutes';
 import helmet from 'helmet';
@@ -200,7 +201,7 @@ class App {
     this.app.use('/api/addresses', AddressRoutes);
     this.app.use('/api/payments', PaymentRoutes);
     this.app.use('/api/wishlist', WishlistRoutes);
-
+    this.app.use('/api/applications', ApplicationRoutes);
 
     // 404 handler
     this.app.use('*', (_, res) => {
