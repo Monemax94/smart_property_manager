@@ -51,6 +51,8 @@ export default function PropertyDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [userApplication, setUserApplication] = useState<any>(null);
+    const [fetchingApp, setFetchingApp] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -66,7 +68,66 @@ export default function PropertyDetailsPage() {
             }
         };
         fetchProperty();
+
+        const fetchUserApplication = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            setFetchingApp(true);
+            try {
+                const res = await axios.get('http://127.0.0.1:8080/api/applications/my-applications', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const app = res.data.data.find((a: any) => a.propertyId?._id === id || a.propertyId === id);
+                setUserApplication(app);
+            } catch (err) {
+                console.error('Failed to fetch user application', err);
+            } finally {
+                setFetchingApp(false);
+            }
+        };
+        fetchUserApplication();
     }, [id]);
+
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [scheduleDate, setScheduleDate] = useState('');
+    const [scheduleMessage, setScheduleMessage] = useState('');
+    const [scheduleLoading, setScheduleLoading] = useState(false);
+    const [scheduleSuccess, setScheduleSuccess] = useState('');
+
+    const handleScheduleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        if (!token) return alert('Login required');
+
+        setScheduleLoading(true);
+        try {
+            if (userApplication) {
+                // If there's an application, tie the meeting to it
+                await axios.post(
+                    `http://127.0.0.1:8080/api/applications/${userApplication._id}/propose-meeting`,
+                    { meetingDate: scheduleDate, role: 'tenant' },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            } else {
+                // Generic property meeting if no application yet
+                await axios.post(
+                    `http://127.0.0.1:8080/api/properties/${id}/schedule`,
+                    { meetingDate: scheduleDate },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            }
+            setScheduleSuccess('Meeting successfully scheduled! The agent will review your request.');
+            setTimeout(() => {
+                setIsScheduleModalOpen(false);
+                setScheduleSuccess('');
+                setScheduleDate('');
+            }, 3000);
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to schedule meeting.");
+        } finally {
+            setScheduleLoading(false);
+        }
+    };
 
     const [paying, setPaying] = useState(false);
 
@@ -339,7 +400,7 @@ export default function PropertyDetailsPage() {
                                 Start the process today. Our automated system will guide you through the next steps and connect you with the owner.
                             </p>
                             <div className="space-y-4">
-                                {isRent && (
+                                {isRent && userApplication?.status === 'payment_pending' && (
                                     <button
                                         onClick={handlePayment}
                                         disabled={paying}
@@ -353,11 +414,48 @@ export default function PropertyDetailsPage() {
                                         ) : 'Pay Rent Now'}
                                     </button>
                                 )}
+
+                                {isRent && !userApplication && (
+                                    <button
+                                        onClick={() => {
+                                            const token = localStorage.getItem('token');
+                                            if(!token) return alert('Login required');
+                                            window.location.href = `/properties/${id}/apply`;
+                                        }}
+                                        className="w-full bg-white text-primary font-black py-4 px-6 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/10 uppercase tracking-widest text-sm"
+                                    >
+                                        Apply for Rental
+                                    </button>
+                                )}
+
+                                {isRent && userApplication && userApplication.status === 'pending' && (
+                                    <div className="w-full bg-white/20 border border-white/30 text-white font-bold py-4 px-6 rounded-2xl text-center">
+                                        Application Pending Approval
+                                    </div>
+                                )}
+
+                                {isRent && userApplication && userApplication.status === 'payment_pending' && userApplication.paymentStatus === 'completed' && (
+                                    <div className="w-full bg-green-500 text-white font-bold py-4 px-6 rounded-2xl text-center">
+                                        Payment Completed
+                                    </div>
+                                )}
+                                
+                                {!isRent && (
+                                    <button
+                                        className="w-full bg-white text-primary font-black py-4 px-6 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-black/10 uppercase tracking-widest text-sm"
+                                    >
+                                        Make a Purchase Offer
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => alert('Contacting agent...')}
+                                    onClick={() => {
+                                        const token = localStorage.getItem('token');
+                                        if(!token) return alert('Login required');
+                                        setIsScheduleModalOpen(true);
+                                    }}
                                     className="w-full bg-white/10 hover:bg-white/20 border border-white/30 text-white font-black py-4 px-6 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-sm"
                                 >
-                                    {isRent ? 'Apply for Rental' : 'Make an Purchase Offer'}
+                                    Schedule Meeting
                                 </button>
                             </div>
                             <div className="mt-8 pt-8 border-t border-white/20 grid grid-cols-2 gap-4">
@@ -374,6 +472,74 @@ export default function PropertyDetailsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Schedule Meeting Modal */}
+            {isScheduleModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-lg p-8 md:p-10 shadow-2xl relative overflow-hidden animate-slideUp">
+                        {/* Decorative background element */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+
+                        <div className="flex justify-between items-center mb-8 relative z-10">
+                            <div>
+                                <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Schedule a Meeting</h3>
+                                <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">Connect with the property agent</p>
+                            </div>
+                            <button onClick={() => setIsScheduleModalOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-900">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+
+                        {scheduleSuccess ? (
+                            <div className="text-center py-8 relative z-10 animate-fadeIn">
+                                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                                <h4 className="text-lg font-black text-gray-900 uppercase">Confirmed</h4>
+                                <p className="text-sm text-gray-500 font-medium mt-2">{scheduleSuccess}</p>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleScheduleSubmit} className="space-y-6 relative z-10">
+                                <div>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Preferred Date</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        min={new Date().toISOString().split('T')[0]}
+                                        value={scheduleDate}
+                                        onChange={(e) => setScheduleDate(e.target.value)}
+                                        className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/30 transition-shadow text-gray-900 font-medium"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Additional Note to Agent (Optional)</label>
+                                    <textarea
+                                        rows={3}
+                                        value={scheduleMessage}
+                                        onChange={(e) => setScheduleMessage(e.target.value)}
+                                        placeholder="Any specific questions or preferred times?"
+                                        className="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-primary/30 transition-shadow text-gray-900 font-medium resize-none"
+                                    ></textarea>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={scheduleLoading || !scheduleDate}
+                                    className="w-full bg-primary hover:bg-primary-hover text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-primary/20 transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {scheduleLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Confirming...
+                                        </>
+                                    ) : 'Confirm Schedule'}
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

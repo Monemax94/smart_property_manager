@@ -190,7 +190,7 @@ export default function NewPropertyPage() {
             }, 1500);
         } catch (err: any) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to create property');
-            console.error('Property Creation Error:', err.response?.data);
+            console.error('Property Creation Error Detail:', err.response?.data || err.message || err);
         } finally {
             setLoading(false);
         }

@@ -58,6 +58,14 @@ export default function Navbar() {
                                 <Link href="/dashboard" className="text-gray-500 hover:text-primary text-xs font-black uppercase tracking-widest transition-colors">
                                     Dashboard
                                 </Link>
+                                <Link href="/dashboard/applications" className="text-gray-500 hover:text-primary text-xs font-black uppercase tracking-widest transition-colors">
+                                    My Apps
+                                </Link>
+                                {['admin', 'superadmin', 'vendor', 'agent'].includes(user?.role) && (
+                                    <Link href="/dashboard/agent-applications" className="text-gray-500 hover:text-primary text-xs font-black uppercase tracking-widest transition-colors">
+                                        Received Apps
+                                    </Link>
+                                )}
                                 <Link href="/profile" className="text-gray-500 hover:text-primary text-xs font-black uppercase tracking-widest transition-colors">
                                     Profile
                                 </Link>

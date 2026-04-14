@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { clearSession, isTokenExpired } from '@/utils/auth';
+import AssignAgentModal from './AssignAgentModal';
 
 interface Property {
     _id: string;
@@ -19,6 +20,7 @@ interface Property {
     status: string;
     images: Array<{ url: string }>;
     createdAt: string;
+    agentId?: string | any;
 }
 
 interface DashboardPropertiesProps {
@@ -34,6 +36,8 @@ export default function DashboardProperties({ onNotify }: DashboardPropertiesPro
     const [statusFilter, setStatusFilter] = useState('');
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
+    const [assignModalOpen, setAssignModalOpen] = useState(false);
+    const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
     const limit = 5;
 
     const fetchProperties = useCallback(async () => {
@@ -97,10 +101,27 @@ export default function DashboardProperties({ onNotify }: DashboardPropertiesPro
         setPage(1);
     };
 
+    const openAssignModal = (id: string) => {
+        setSelectedPropertyId(id);
+        setAssignModalOpen(true);
+    };
+
     const totalPages = Math.ceil(total / limit);
 
     return (
         <div className="bg-card rounded-xl border border-card-border shadow overflow-hidden mt-8">
+            <AssignAgentModal
+                isOpen={assignModalOpen}
+                propertyId={selectedPropertyId}
+                onClose={() => setAssignModalOpen(false)}
+                onSuccess={(msg) => {
+                    if (onNotify) onNotify('success', msg);
+                    fetchProperties();
+                }}
+                onError={(msg) => {
+                    if (onNotify) onNotify('error', msg);
+                }}
+            />
             <div className="px-6 py-5 border-b border-card-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                 <h3 className="text-lg leading-6 font-bold text-foreground tracking-tight whitespace-nowrap">My Properties</h3>
 
@@ -152,7 +173,7 @@ export default function DashboardProperties({ onNotify }: DashboardPropertiesPro
                             <th className="px-6 py-3 text-left text-xs font-bold text-muted-text uppercase tracking-widest">Property</th>
                             <th className="px-6 py-3 text-left text-xs font-bold text-muted-text uppercase tracking-widest">Type</th>
                             <th className="px-6 py-3 text-left text-xs font-bold text-muted-text uppercase tracking-widest">Price</th>
-                            <th className="px-6 py-3 text-left text-xs font-bold text-muted-text uppercase tracking-widest">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-muted-text uppercase tracking-widest">Agent</th>
                             <th className="px-6 py-3 text-right text-xs font-bold text-muted-text uppercase tracking-widest">Actions</th>
                         </tr>
                     </thead>
@@ -199,18 +220,27 @@ export default function DashboardProperties({ onNotify }: DashboardPropertiesPro
                                         }
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 py-1 text-[10px] uppercase font-bold rounded-full ${property.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                            {property.status}
-                                        </span>
+                                        {property.agentId ? (
+                                            <span className="px-2 py-1 text-[10px] uppercase font-bold rounded-full bg-blue-100 text-blue-700">Assigned</span>
+                                        ) : (
+                                            <span className="px-2 py-1 text-[10px] uppercase font-bold rounded-full bg-gray-100 text-gray-500">Unassigned</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                        <button
-                                            onClick={() => router.push(`/properties/edit/${property._id}`)}
-                                            className="text-primary hover:text-primary-hover font-bold transition-colors group-hover:underline"
-                                        >
-                                            Edit Details
-                                        </button>
+                                        <div className="flex gap-4 justify-end">
+                                            <button
+                                                onClick={() => openAssignModal(property._id)}
+                                                className="text-[10px] text-primary hover:text-white bg-primary/10 hover:bg-primary font-black uppercase tracking-widest px-3 py-1 rounded-full transition-all border border-primary/20"
+                                            >
+                                                Assign Agent
+                                            </button>
+                                            <button
+                                                onClick={() => router.push(`/properties/edit/${property._id}`)}
+                                                className="text-gray-500 hover:text-primary-hover font-bold transition-colors group-hover:underline text-[11px] uppercase tracking-wider"
+                                            >
+                                                Edit
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))

@@ -64,7 +64,11 @@ export default function RegisterPage() {
         setError('');
 
         try {
-            await axios.post('http://127.0.0.1:8080/api/auth/register', formData);
+            let endpoint = 'http://127.0.0.1:8080/api/auth/register';
+            if (formData.role === 'vendor') endpoint = 'http://127.0.0.1:8080/api/auth/register-vendor';
+            if (formData.role === 'agent') endpoint = 'http://127.0.0.1:8080/api/auth/register-agent';
+            
+            await axios.post(endpoint, formData);
             router.push('/login');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Registration failed');
@@ -284,7 +288,8 @@ export default function RegisterPage() {
                                         className="w-full px-6 py-4 bg-gray-50 border-transparent rounded-[1.2rem] text-gray-900 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all font-black uppercase tracking-widest text-xs"
                                     >
                                         <option value="tenant">I am a Tenant</option>
-                                        <option value="vendor">I am a Vendor</option>
+                                        <option value="vendor">I am a Landlord</option>
+                                        <option value="agent">I am an Agent</option>
                                     </select>
                                 </div>
                                 <div className="pt-4">

@@ -46,7 +46,7 @@ export default function DashboardPage() {
                         <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tight">Dashboard Overview</h1>
                         <p className="text-muted-text font-medium text-xs md:text-sm">Welcome back! Manage your listings and track performance.</p>
                     </div>
-                    {['admin', 'superadmin'].includes(user?.role) && (
+                    {['admin', 'superadmin', 'vendor', 'agent'].includes(user?.role) && (
                         <Link href="/properties/new" className="bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-xl font-bold shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all active:translate-y-0 text-sm tracking-tight flex items-center gap-2">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                             List New Property
@@ -69,7 +69,7 @@ export default function DashboardPage() {
                 )}
 
                 {/* Statistics Cards for Admins */}
-                {['admin', 'superadmin'].includes(user?.role) && (
+                {['admin', 'superadmin', 'vendor', 'agent'].includes(user?.role) && (
                     <DashboardStats onNotify={showAlert} />
                 )}
 
@@ -89,6 +89,16 @@ export default function DashboardPage() {
                                     <span className="font-bold text-sm">Profile Settings</span>
                                     <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </Link>
+                                <Link href="/dashboard/applications" className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-white/5 rounded-xl hover:bg-primary/5 hover:text-primary transition-all group border border-transparent hover:border-primary/20">
+                                    <span className="font-bold text-sm">My Applications</span>
+                                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </Link>
+                                {['admin', 'superadmin', 'vendor', 'agent'].includes(user?.role) && (
+                                    <Link href="/dashboard/agent-applications" className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-white/5 rounded-xl hover:bg-primary/5 hover:text-primary transition-all group border border-transparent hover:border-primary/20">
+                                        <span className="font-bold text-sm">Received Applications</span>
+                                        <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    </Link>
+                                )}
                                 <Link href="/properties" className="flex items-center justify-between p-4 bg-gray-50/50 dark:bg-white/5 rounded-xl hover:bg-primary/5 hover:text-primary transition-all group border border-transparent hover:border-primary/20">
                                     <span className="font-bold text-sm">Marketplace View</span>
                                     <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -105,7 +115,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* User Managed Properties Table */}
-                {['admin', 'superadmin'].includes(user?.role) && (
+                {['admin', 'superadmin', 'vendor', 'agent'].includes(user?.role) && (
                     <div className="mt-12 pt-8 border-t border-gray-100">
                         <DashboardProperties onNotify={showAlert} />
                     </div>
